@@ -2,35 +2,19 @@
 pragma solidity 0.8.30;
 
 import {Test} from "forge-std/Test.sol";
+import {ERC2771Forwarder} from "@openzeppelin/contracts/metatx/ERC2771Forwarder.sol";
+import {Firstrow} from "../src/Firstrow.sol";
+import {IERC3009} from "../src/interfaces/IERC3009.sol";
 
-interface IAusd {
-    function balanceOf(address) external view returns (uint256);
+interface IAusd is IERC3009 {
     function DOMAIN_SEPARATOR() external view returns (bytes32);
-    function receiveWithAuthorization(
-        address from,
-        address to,
-        uint256 value,
-        uint256 validAfter,
-        uint256 validBefore,
-        bytes32 nonce,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external;
 }
 
 interface IFaucet {
     function requestFunds(address) external;
 }
 
-contract Receiver {
-    function pull(IAusd ausd, address from, uint256 value, uint256 before, bytes32 nonce, uint8 v, bytes32 r, bytes32 s)
-        external
-    {
-        ausd.receiveWithAuthorization(from, address(this), value, 0, before, nonce, v, r, s);
-    }
-}
-
+/// Buys a ticket with real AUSD on a fork of Monad testnet.
 contract AusdForkTest is Test {
     IAusd constant AUSD = IAusd(0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC);
     IFaucet constant FAUCET = IFaucet(0xd236c18D274E54FAccC3dd9DDA4b27965a73ee6C);
@@ -38,26 +22,38 @@ contract AusdForkTest is Test {
         "ReceiveWithAuthorization(address from,address to,uint256 value,uint256 validAfter,uint256 validBefore,bytes32 nonce)"
     );
 
-    function setUp() public {
+    function test_buyWithRealAusd() public {
         vm.createSelectFork("monad_testnet");
-    }
-
-    function test_receiveWithAuthorization() public {
+        Firstrow firstrow = new Firstrow(AUSD, address(new ERC2771Forwarder("Firstrow")));
         (address fan, uint256 key) = makeAddrAndKey("fan");
         FAUCET.requestFunds(fan);
-        uint256 funded = AUSD.balanceOf(fan);
-        assertGt(funded, 0);
 
-        Receiver receiver = new Receiver();
-        uint256 value = 1e6;
-        uint256 before = block.timestamp + 1 hours;
-        bytes32 nonce = keccak256("ticket-1");
-        bytes32 structHash = keccak256(abi.encode(RECEIVE_TYPEHASH, fan, address(receiver), value, 0, before, nonce));
-        (uint8 v, bytes32 r, bytes32 s) =
-            vm.sign(key, keccak256(abi.encodePacked("\x19\x01", AUSD.DOMAIN_SEPARATOR(), structHash)));
+        Firstrow.TierParams[] memory tiers = new Firstrow.TierParams[](1);
+        tiers[0] = Firstrow.TierParams({price: 5e6, supply: 10});
+        uint256 id = firstrow.createEvent(
+            Firstrow.EventParams({
+                metadataURI: "",
+                startsAt: uint64(block.timestamp + 1 days),
+                endsAt: uint64(block.timestamp + 2 days),
+                saleStartsAt: uint64(block.timestamp),
+                presaleStartsAt: uint64(block.timestamp),
+                presaleMinShows: 0,
+                resaleCapBps: 0,
+                royaltyBps: 0
+            }),
+            tiers
+        );
 
-        receiver.pull(AUSD, fan, value, before, nonce, v, r, s);
-        assertEq(AUSD.balanceOf(address(receiver)), value);
-        assertEq(AUSD.balanceOf(fan), funded - value);
+        Firstrow.Authorization memory a;
+        a.validBefore = block.timestamp + 1 hours;
+        a.nonce = keccak256("order-1");
+        bytes32 structHash =
+            keccak256(abi.encode(RECEIVE_TYPEHASH, fan, address(firstrow), 5e6, 0, a.validBefore, a.nonce));
+        (a.v, a.r, a.s) = vm.sign(key, keccak256(abi.encodePacked("\x19\x01", AUSD.DOMAIN_SEPARATOR(), structHash)));
+
+        vm.prank(fan);
+        firstrow.buy(id, 0, 1, address(0), a);
+        assertEq(AUSD.balanceOf(address(firstrow)), 5e6);
+        assertEq(firstrow.getTicket(1).owner, fan);
     }
 }
