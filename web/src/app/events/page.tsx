@@ -1,0 +1,45 @@
+"use client";
+
+import { useState } from "react";
+import { EventCard } from "@/components/event-card";
+import { Reveal } from "@/components/motion";
+import { Shell } from "@/components/shell";
+import { useEvents } from "@/lib/hooks";
+
+export default function EventsPage() {
+  const { data, isLoading } = useEvents();
+  const [view, setView] = useState<"upcoming" | "past">("upcoming");
+  const now = new Date();
+  const events = (data ?? []).filter((e) => (view === "upcoming" ? e.endsAt > now && !e.cancelled : e.endsAt <= now || e.cancelled));
+
+  return (
+    <Shell>
+      <div className="flex flex-wrap items-end justify-between gap-6">
+        <Reveal as="h1" lines immediate className="display text-[clamp(3.5rem,10vw,9rem)]">
+          What&apos;s <span className="accent">on</span>
+        </Reveal>
+        <div className="flex gap-5 pb-3">
+          {(["upcoming", "past"] as const).map((v) => (
+            <button key={v} onClick={() => setView(v)} className={`label ${view === v ? "" : "text-mute"}`}>
+              {view === v ? "■" : "□"} {v}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-16">
+        {isLoading ? (
+          <p className="label text-mute">Reading the chain…</p>
+        ) : events.length === 0 ? (
+          <p className="headline text-2xl text-ink-2">{view === "upcoming" ? "Nothing on yet." : "No past events."}</p>
+        ) : (
+          <div className="grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+            {events.map((e, i) => (
+              <EventCard key={e.id} event={e} index={i} />
+            ))}
+          </div>
+        )}
+      </div>
+    </Shell>
+  );
+}

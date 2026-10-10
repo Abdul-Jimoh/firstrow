@@ -9,7 +9,7 @@ for (const [name, viewport] of [["desktop", { width: 1440, height: 900 }], ["mob
   const page = await browser.newPage({ viewport, deviceScaleFactor: 1, reducedMotion: "reduce" });
   page.on("pageerror", (e) => console.log(`[${name}] pageerror`, e.message));
   await page.goto(base + path, { waitUntil: "networkidle" });
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(3500);
   const file = `${out}/${name}${path.replace(/\W+/g, "-")}.png`;
   await page.screenshot({ path: file, fullPage: true });
   console.log(file);
