@@ -27,5 +27,6 @@ if (!(name in networks)) throw new Error(`Unknown NEXT_PUBLIC_CHAIN: ${name}`);
 export const network = networks[name];
 export const chain = network.chain;
 export const AUSD_DECIMALS = 6;
+export const explorer = chain.blockExplorers?.default.url ?? "https://testnet.monadscan.com";
 
 export const publicClient = createPublicClient({ chain, transport: http() });

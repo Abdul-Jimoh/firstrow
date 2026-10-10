@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { parseEventLogs, type Hex } from "viem";
 import { firstrowAbi } from "@/lib/abi";
 import { network, publicClient } from "@/lib/chain";
@@ -98,10 +98,8 @@ declare global {
 }
 
 export default function Lab() {
-  const [ready, setReady] = useState(false);
   useEffect(() => {
     window.lab = lab;
-    setReady(true);
   }, []);
-  return <main className="p-8 font-mono text-sm">{ready ? "lab ready" : "loading"}</main>;
+  return <main className="p-8 font-mono text-sm">lab</main>;
 }

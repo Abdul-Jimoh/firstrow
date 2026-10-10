@@ -85,23 +85,44 @@ export function endSession() {
   account = null;
 }
 
+const listeners = new Set<() => void>();
+let cached: { raw: string | null; value: StoredCredential | null } = { raw: null, value: null };
+
 export function storedCredential(): StoredCredential | null {
+  let raw: string | null = null;
   try {
-    const raw = localStorage.getItem(CREDENTIAL_KEY);
-    return raw ? (JSON.parse(raw) as StoredCredential) : null;
-  } catch {
-    return null;
+    raw = localStorage.getItem(CREDENTIAL_KEY);
+  } catch {}
+  if (raw !== cached.raw) {
+    let value: StoredCredential | null = null;
+    try {
+      value = raw ? (JSON.parse(raw) as StoredCredential) : null;
+    } catch {}
+    cached = { raw, value };
   }
+  return cached.value;
 }
 
-function storeCredential(credential: StoredCredential) {
-  localStorage.setItem(CREDENTIAL_KEY, JSON.stringify(credential));
+// For useSyncExternalStore: fires on sign-in/out here and in other tabs.
+export function subscribeCredential(listener: () => void) {
+  listeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+
+function storeCredential(credential: StoredCredential | null) {
+  if (credential) localStorage.setItem(CREDENTIAL_KEY, JSON.stringify(credential));
+  else localStorage.removeItem(CREDENTIAL_KEY);
+  listeners.forEach((l) => l());
 }
 
 export function forget() {
   endSession();
-  localStorage.removeItem(CREDENTIAL_KEY);
   localStorage.removeItem(DOOR_KEYS_KEY);
+  storeCredential(null);
 }
 
 export async function signUp(name: string): Promise<{ account: LocalAccount; credential: StoredCredential }> {
