@@ -123,6 +123,7 @@ contract Firstrow is ERC2771Context, EIP712, ReentrancyGuard {
     mapping(address host => uint32) public supporterCount;
 
     event EventCreated(uint256 indexed eventId, address indexed host, string metadataURI);
+    event EventUpdated(uint256 indexed eventId, string metadataURI);
     event EventCancelled(uint256 indexed eventId);
     event DoorSet(uint256 indexed eventId, address indexed door, bool allowed);
     event DoorKeySet(uint256 indexed eventId, address indexed fan, address key);
@@ -209,6 +210,15 @@ contract Firstrow is ERC2771Context, EIP712, ReentrancyGuard {
         }
 
         emit EventCreated(eventId, e.host, p.metadataURI);
+    }
+
+    /// @notice Change the event's description, poster and other display details. The schedule, prices and
+    /// resale rules can't be changed.
+    function updateMetadata(uint256 eventId, string calldata metadataURI) external {
+        Event storage e = _onlyHost(eventId);
+        if (block.timestamp >= e.endsAt) revert SaleClosed();
+        e.metadataURI = metadataURI;
+        emit EventUpdated(eventId, metadataURI);
     }
 
     function setDoor(uint256 eventId, address door, bool allowed) external {

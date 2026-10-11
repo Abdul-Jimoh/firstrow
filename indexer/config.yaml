@@ -9,6 +9,7 @@ contracts:
   - name: Firstrow
     events:
       - event: "EventCreated(uint256 indexed eventId, address indexed host, string metadataURI)"
+      - event: "EventUpdated(uint256 indexed eventId, string metadataURI)"
       - event: "EventCancelled(uint256 indexed eventId)"
       - event: "TicketsPurchased(uint256 indexed eventId, address indexed buyer, uint256 tier, uint256 firstTicketId, uint256 quantity, uint256 paid)"
       - event: "CheckedIn(uint256 indexed eventId, uint256 indexed ticketId, address indexed fan)"

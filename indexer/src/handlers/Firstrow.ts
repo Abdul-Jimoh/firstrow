@@ -37,6 +37,11 @@ indexer.onEvent({ contract: "Firstrow", event: "EventCreated" }, async ({ event,
   context.Totals.set({ ...t, events: t.events + 1 });
 });
 
+indexer.onEvent({ contract: "Firstrow", event: "EventUpdated" }, async ({ event, context }) => {
+  const e = await context.Event.get(event.params.eventId.toString());
+  if (e) context.Event.set({ ...e, metadataURI: event.params.metadataURI });
+});
+
 indexer.onEvent({ contract: "Firstrow", event: "EventCancelled" }, async ({ event, context }) => {
   const e = await context.Event.get(event.params.eventId.toString());
   if (e) context.Event.set({ ...e, cancelled: true });

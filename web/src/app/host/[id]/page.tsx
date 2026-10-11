@@ -10,9 +10,10 @@ import { Reveal } from "@/components/motion";
 import { QR } from "@/components/qr";
 import { Shell } from "@/components/shell";
 import { Button, Notice, Stat } from "@/components/ui";
-import { dateLabel, formatAusd, phaseOf, timeLabel } from "@/lib/events";
+import { dateLabel, encodeMeta, formatAusd, phaseOf, timeLabel } from "@/lib/events";
 import { useEvent, useHostBalance } from "@/lib/hooks";
 import { fetchTopSupporters } from "@/lib/indexer";
+import { preparePoster, uploadPoster } from "@/lib/poster";
 import { send } from "@/lib/signing";
 
 export default function ManageEventPage() {
@@ -59,6 +60,13 @@ export default function ManageEventPage() {
       setBusy(null);
     }
   }
+
+  const changePoster = (file: File | undefined) =>
+    file &&
+    run("poster", async () => {
+      const url = await uploadPoster(await preparePoster(file));
+      await send(await unlock(), "updateMetadata", [event.id, encodeMeta({ ...event.meta, poster: url })]);
+    });
 
   // The door phone's key is made here and travels only in the link's #fragment, which never reaches a server.
   // It can do one thing: submit check-ins that ticket holders have signed, for this event.
@@ -190,7 +198,19 @@ export default function ManageEventPage() {
         </section>
       )}
 
-      <div className="mt-16 border-t rule pt-6">
+      <div className="mt-16 flex flex-wrap items-center gap-x-10 gap-y-4 border-t rule pt-6">
+        {phase !== "ended" && (
+          <label className={`label link-line cursor-pointer ${busy === "poster" ? "opacity-40" : ""}`}>
+            {busy === "poster" ? "Uploading poster…" : event.meta.poster ? "Change poster" : "+ Upload a poster"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              disabled={!!busy}
+              onChange={(e) => changePoster(e.target.files?.[0])}
+            />
+          </label>
+        )}
         <Link href={`/events/${event.id}`} className="label link-line">
           View public page →
         </Link>

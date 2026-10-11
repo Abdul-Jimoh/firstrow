@@ -48,6 +48,26 @@ contract FirstrowTest is Base {
         firstrow.createEvent(_params(5001, 0), _tiers(PRICE, 1));
     }
 
+    function test_updateMetadata_hostOnlyAndBeforeEnd() public {
+        uint256 id = _createEvent();
+        vm.prank(fan);
+        vm.expectRevert(Firstrow.NotHost.selector);
+        firstrow.updateMetadata(id, "ipfs://new");
+
+        vm.prank(host);
+        firstrow.updateMetadata(id, "ipfs://new");
+        (Firstrow.Event memory e,) = firstrow.getEvent(id);
+        assertEq(e.metadataURI, "ipfs://new");
+        // Nothing a buyer relied on has moved.
+        assertEq(e.startsAt, uint64(block.timestamp + START));
+        assertEq(e.royaltyBps, 500);
+
+        vm.warp(e.endsAt);
+        vm.prank(host);
+        vm.expectRevert(Firstrow.SaleClosed.selector);
+        firstrow.updateMetadata(id, "ipfs://late");
+    }
+
     // buy
 
     function test_buy_pullsAusdIntoEscrow() public {

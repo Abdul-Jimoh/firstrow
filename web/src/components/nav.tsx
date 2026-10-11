@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import { useAccount } from "./account";
 import { BlockClock } from "./block-clock";
 import { Logo } from "./logo";
@@ -12,9 +13,19 @@ const links = [
   { href: "/host", label: "Host" },
 ];
 
+function subscribeScroll(listener: () => void) {
+  window.addEventListener("scroll", listener, { passive: true });
+  return () => window.removeEventListener("scroll", listener);
+}
+
+// The tagline and block clock sit under the main row, so they give way once content scrolls beneath the nav.
+const useScrolled = () => useSyncExternalStore(subscribeScroll, () => window.scrollY > 24, () => false);
+
 export function Nav() {
   const { address, name, ready, openSheet } = useAccount();
   const pathname = usePathname();
+  const scrolled = useScrolled();
+  const secondary = `transition-opacity duration-300 ${scrolled ? "opacity-0" : "opacity-70"}`;
 
   return (
     <header className="gutter pointer-events-none fixed inset-x-0 top-0 z-40 pt-5 text-paper mix-blend-difference">
@@ -24,7 +35,7 @@ export function Nav() {
             <Logo mono className="size-7" />
             Firstrow
           </Link>
-          <p className="label mt-1 hidden opacity-70 sm:block">Tickets tied to a person</p>
+          <p className={`label mt-1 hidden sm:block ${secondary}`}>Tickets tied to a person</p>
         </div>
 
         <nav className="pointer-events-auto hidden gap-6 pt-1.5 md:flex" aria-label="Main">
@@ -46,7 +57,7 @@ export function Nav() {
               Sign in
             </button>
           ))}
-          <BlockClock className="hidden opacity-60 sm:block" />
+          <BlockClock className={`hidden sm:block ${secondary}`} />
         </div>
       </div>
       <nav className="pointer-events-auto mt-4 flex gap-5 md:hidden" aria-label="Main mobile">
