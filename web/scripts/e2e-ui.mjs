@@ -59,7 +59,7 @@ step("host signed up");
 const start = new Date(Date.now() + 30 * 60_000);
 const end = new Date(start.getTime() + 3 * 3600_000);
 await host.goto(`${base}/host/new`);
-await host.getByLabel("Name").fill(`E2E Night ${start.toISOString().slice(11, 16)}`);
+await host.getByLabel("Name").fill(`Soundcheck ${start.toISOString().slice(11, 16)}`);
 await host.getByLabel("Venue").fill("Test Hall");
 await host.getByLabel("City").fill("Lagos");
 await host.getByLabel("Date").first().fill(`${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`);
