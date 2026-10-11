@@ -26,6 +26,8 @@ type AccountContextValue = {
   signOut: () => void;
   // The unlocked account, prompting for the passkey when the session has ended.
   unlock: () => Promise<LocalAccount>;
+  // Sets the display name shown on tickets and at the door.
+  rename: (name: string) => Promise<void>;
 };
 
 const AccountContext = createContext<AccountContextValue | null>(null);
@@ -58,6 +60,14 @@ export function AccountProvider({ children }: { children: ReactNode }) {
 
   const unlock = useCallback(async () => currentAccount() ?? signIn(), [signIn]);
 
+  const rename = useCallback(
+    async (displayName: string) => {
+      await saveProfile(await unlock(), displayName);
+      rememberName(displayName);
+    },
+    [unlock],
+  );
+
   const value = useMemo(
     () => ({
       address: credential?.address ?? null,
@@ -70,8 +80,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       signIn,
       signOut: forget,
       unlock,
+      rename,
     }),
-    [credential, sheetOpen, signUp, signIn, unlock],
+    [credential, sheetOpen, signUp, signIn, unlock, rename],
   );
 
   return <AccountContext.Provider value={value}>{children}</AccountContext.Provider>;

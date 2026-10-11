@@ -5,6 +5,7 @@ import { useState, type ReactNode } from "react";
 import { AccountProvider } from "./account";
 import { SignInSheet } from "./sign-in-sheet";
 import { SmoothScroll } from "./motion";
+import { Nav } from "./nav";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -14,6 +15,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AccountProvider>
         <SmoothScroll>
+          <Nav />
           {children}
           <SignInSheet />
         </SmoothScroll>

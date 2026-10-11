@@ -5,11 +5,12 @@ export const profileMessage = (name: string) => `Firstrow display name: ${name}`
 
 export async function saveProfile(account: LocalAccount, name: string) {
   const signature = await account.signMessage({ message: profileMessage(name) });
-  await fetch("/api/profile", {
+  const res = await fetch("/api/profile", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ address: account.address, name, signature }),
   });
+  if (!res.ok) throw new Error(((await res.json()) as { error?: string }).error ?? "Couldn't save your name.");
 }
 
 export async function fetchNames(addresses: Address[]): Promise<Record<string, string>> {

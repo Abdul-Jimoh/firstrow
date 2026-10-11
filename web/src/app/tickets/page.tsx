@@ -56,7 +56,7 @@ function TicketList({ title, rows, holder }: { title: string; rows: Row[]; holde
 }
 
 export default function TicketsPage() {
-  const { address, name, ready, openSheet, signOut } = useAccount();
+  const { address, name, ready, openSheet, signOut, rename } = useAccount();
   const { data: tickets, isLoading } = useTickets(address);
   const { data: events } = useEvents();
   const { data: balance } = useAusd(address);
@@ -64,6 +64,22 @@ export default function TicketsPage() {
   const [toppingUp, setToppingUp] = useState(false);
   const [topUpError, setTopUpError] = useState<string | null>(null);
   const [receiving, setReceiving] = useState(false);
+  const [naming, setNaming] = useState<string | null>(null);
+  const [savingName, setSavingName] = useState(false);
+
+  async function saveName() {
+    if (!naming?.trim()) return;
+    setSavingName(true);
+    setTopUpError(null);
+    try {
+      await rename(naming.trim());
+      setNaming(null);
+    } catch (e) {
+      setTopUpError(e instanceof Error ? e.message : "Couldn't save your name.");
+    } finally {
+      setSavingName(false);
+    }
+  }
 
   const byId = new Map((events ?? []).map((e) => [e.id, e]));
   const rows = (tickets ?? []).flatMap((ticket) => {
@@ -106,7 +122,35 @@ export default function TicketsPage() {
           <section className="mt-10 grid gap-6 bg-ink p-5 text-paper sm:p-6 md:grid-cols-[1fr_auto] md:items-end">
             <div className="min-w-0">
               <p className="label text-paper/60">Signed in as</p>
-              <p className="headline mt-1 truncate text-2xl">{name || `${address.slice(0, 6)}…${address.slice(-4)}`}</p>
+              {naming !== null ? (
+                <form
+                  className="mt-2 flex max-w-sm items-end gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    saveName();
+                  }}
+                >
+                  <input
+                    autoFocus
+                    aria-label="Your name"
+                    maxLength={40}
+                    value={naming}
+                    onChange={(e) => setNaming(e.target.value)}
+                    placeholder="Name on your tickets"
+                    className="w-full border-b border-paper/50 bg-transparent pb-1 text-xl outline-none placeholder:text-paper/40 focus:border-paper"
+                  />
+                  <SmallButton type="submit" variant="primary" busy={savingName}>
+                    Save
+                  </SmallButton>
+                </form>
+              ) : (
+                <p className="mt-1 flex flex-wrap items-baseline gap-x-3">
+                  <span className="headline truncate text-2xl">{name || `${address.slice(0, 6)}…${address.slice(-4)}`}</span>
+                  <button className="label text-paper/70 underline underline-offset-4 hover:text-paper" onClick={() => setNaming(name)}>
+                    {name ? "Change" : "Add your name"}
+                  </button>
+                </p>
+              )}
               <p className="label mt-5 text-paper/60">Balance</p>
               <p className="display mt-1 text-5xl tabular-nums">{formatAusd(balance ?? 0n, { free: false })}</p>
             </div>

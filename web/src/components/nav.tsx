@@ -33,13 +33,16 @@ export function Nav() {
   const scrolled = useScrolled();
   const secondary = scrolled ? "hidden" : "hidden opacity-70 sm:block";
 
+  // The door scanner is a full-screen tool with its own header.
+  if (pathname.startsWith("/door") || pathname.startsWith("/lab")) return null;
+
   return (
     <header
       className={`gutter fixed inset-x-0 top-0 z-40 text-ink transition-[padding,background-color,border-color] duration-300 ${
         scrolled ? "border-b border-ink/15 bg-paper py-3" : "border-b border-transparent pt-5 pb-3"
       }`}
     >
-      <div className="flex items-start justify-between gap-6">
+      <div className="grid grid-cols-[1fr_auto] items-start gap-6 md:grid-cols-[1fr_auto_1fr]">
         <div>
           <Link href="/" className="headline flex items-center gap-2.5 text-2xl tracking-tight">
             <Logo mono className="size-7" />
@@ -56,7 +59,7 @@ export function Nav() {
           ))}
         </nav>
 
-        <div className="flex flex-col items-end gap-1.5">
+        <div className="flex flex-col items-end gap-1.5 justify-self-end">
           {ready && (address ? (
             <Link href="/tickets" className="label max-w-[11rem] truncate rounded-full border border-current px-4 py-2">
               {name || `${address.slice(0, 6)}…${address.slice(-4)}`}

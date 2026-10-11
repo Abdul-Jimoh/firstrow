@@ -128,7 +128,10 @@ export async function fetchEvent(id: bigint): Promise<EventView | null> {
 export async function fetchEvents(limit = 60): Promise<EventView[]> {
   const count = await publicClient.readContract({ address: network.firstrow, abi: firstrowAbi, functionName: "eventCount" });
   const ids: bigint[] = [];
-  for (let id = count; id > 0n && ids.length < limit; id--) ids.push(id);
+  const hidden: readonly bigint[] = network.hidden;
+  for (let id = count; id > 0n && ids.length < limit; id--) {
+    if (!hidden.includes(id)) ids.push(id);
+  }
   if (ids.length === 0) return [];
   const results = await publicClient.multicall({
     contracts: ids.map((id) => ({ address: network.firstrow, abi: firstrowAbi, functionName: "getEvent", args: [id] }) as const),
