@@ -143,7 +143,7 @@ export default function NewEventPage() {
             {tiers.map((t, i) => (
               <div key={i} className="grid grid-cols-[1fr_6rem_5rem_auto] items-end gap-4">
                 <Field label={i === 0 ? "Tier" : ""}>
-                  <input value={t.name} maxLength={32} onChange={(e) => updateTier(i, { name: e.target.value })} className={inputClass} />
+                  <input value={t.name} maxLength={60} onChange={(e) => updateTier(i, { name: e.target.value })} className={inputClass} />
                 </Field>
                 <Field label={i === 0 ? "Price $" : ""}>
                   <input inputMode="decimal" value={t.price} onChange={(e) => updateTier(i, { price: e.target.value })} className={inputClass} />

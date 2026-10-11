@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { errorMessage, useAccount } from "@/components/account";
+import { EditDetails } from "@/components/edit-details";
 import { Reveal } from "@/components/motion";
 import { QR } from "@/components/qr";
 import { Shell } from "@/components/shell";
@@ -36,6 +37,7 @@ export default function ManageEventPage() {
   const [error, setError] = useState<string | null>(null);
   const [doorLink, setDoorLink] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   if (isLoading) return <Shell><p className="label text-mute">Reading the chain…</p></Shell>;
   if (!event) return <Shell><h1 className="display text-6xl">No such event.</h1></Shell>;
@@ -201,7 +203,26 @@ export default function ManageEventPage() {
         </section>
       )}
 
+      {editing && (
+        <EditDetails
+          event={event}
+          busy={busy === "details"}
+          onCancel={() => setEditing(false)}
+          onSave={(meta) =>
+            run("details", async () => {
+              await send(await unlock(), "updateMetadata", [event.id, encodeMeta(meta)]);
+              setEditing(false);
+            })
+          }
+        />
+      )}
+
       <div className="mt-16 flex flex-wrap items-center gap-x-10 gap-y-4 border-t rule pt-6">
+        {phase !== "ended" && !editing && (
+          <button className="label link-line" onClick={() => setEditing(true)}>
+            Edit details
+          </button>
+        )}
         {phase !== "ended" && (
           <label className={`label link-line cursor-pointer ${busy === "poster" ? "opacity-40" : ""}`}>
             {busy === "poster" ? "Uploading poster…" : event.meta.poster ? "Change poster" : "+ Upload a poster"}

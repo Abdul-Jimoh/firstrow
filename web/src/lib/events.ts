@@ -73,7 +73,7 @@ export function decodeMeta(uri: string, id: bigint): EventMeta {
       venue: String(meta.venue ?? "").slice(0, 120),
       city: String(meta.city ?? "").slice(0, 60),
       description: String(meta.description ?? "").slice(0, 2000),
-      tiers: Array.isArray(meta.tiers) ? meta.tiers.map((t) => String(t).slice(0, 40)) : [],
+      tiers: Array.isArray(meta.tiers) ? meta.tiers.map((t) => String(t).slice(0, 60)) : [],
       poster: typeof meta.poster === "string" && POSTER_URL.test(meta.poster) ? meta.poster : undefined,
     };
   } catch {
