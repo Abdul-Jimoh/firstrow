@@ -43,6 +43,9 @@ export enum TicketStatus {
 
 export type TicketView = { id: bigint; eventId: bigint; tier: number; status: TicketStatus; owner: Address };
 
+// Posters are only shown from our own Vercel Blob store, so event metadata can't point the page at arbitrary hosts.
+const POSTER_URL = /^https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\/posters\//;
+
 const fallbackMeta = (id: bigint): EventMeta => ({
   name: `Event ${id}`,
   venue: "",
@@ -71,7 +74,7 @@ export function decodeMeta(uri: string, id: bigint): EventMeta {
       city: String(meta.city ?? "").slice(0, 60),
       description: String(meta.description ?? "").slice(0, 2000),
       tiers: Array.isArray(meta.tiers) ? meta.tiers.map((t) => String(t).slice(0, 40)) : [],
-      poster: typeof meta.poster === "string" && meta.poster.startsWith("https://") ? meta.poster : undefined,
+      poster: typeof meta.poster === "string" && POSTER_URL.test(meta.poster) ? meta.poster : undefined,
     };
   } catch {
     return fallbackMeta(id);

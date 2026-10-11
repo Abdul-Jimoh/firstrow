@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { errorMessage, useAccount } from "@/components/account";
 import { Reveal } from "@/components/motion";
 import { Poster } from "@/components/poster";
@@ -9,6 +9,7 @@ import { Shell } from "@/components/shell";
 import { Button, Field, inputClass, Notice } from "@/components/ui";
 import { createEvent } from "@/lib/actions";
 import { parseAusd } from "@/lib/events";
+import { preparePoster, uploadPoster } from "@/lib/poster";
 
 type TierInput = { name: string; price: string; supply: string };
 
@@ -32,8 +33,22 @@ export default function NewEventPage() {
   const [royalty, setRoyalty] = useState(500);
   const [presale, setPresale] = useState(false);
   const [publicSale, setPublicSale] = useState(() => localDate(new Date(Date.now() + 2 * 864e5)));
+  const [poster, setPoster] = useState<{ blob: Blob; preview: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => () => void (poster && URL.revokeObjectURL(poster.preview)), [poster]);
+
+  async function pickPoster(file: File | undefined) {
+    if (!file) return;
+    setError(null);
+    try {
+      const blob = await preparePoster(file);
+      setPoster({ blob, preview: URL.createObjectURL(blob) });
+    } catch (err) {
+      setError(errorMessage(err));
+    }
+  }
 
   const updateTier = (i: number, patch: Partial<TierInput>) => setTiers((ts) => ts.map((t, j) => (i === j ? { ...t, ...patch } : t)));
 
@@ -56,8 +71,16 @@ export default function NewEventPage() {
 
       setBusy(true);
       const account = await unlock();
+      const posterUrl = poster ? await uploadPoster(poster.blob) : undefined;
       const id = await createEvent(account, {
-        meta: { name: name.trim(), venue: venue.trim(), city: city.trim(), description: description.trim(), tiers: tiers.map((t) => t.name.trim()) },
+        meta: {
+          name: name.trim(),
+          venue: venue.trim(),
+          city: city.trim(),
+          description: description.trim(),
+          tiers: tiers.map((t) => t.name.trim()),
+          poster: posterUrl,
+        },
         startsAt,
         endsAt,
         saleStartsAt,
@@ -174,7 +197,25 @@ export default function NewEventPage() {
         </div>
 
         <aside className="lg:sticky lg:top-36 lg:self-start">
-          <Poster seed={`preview:${name}`} title={name || "Your event"} />
+          {poster ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={poster.preview} alt="Your poster" className="aspect-[3/4] w-full object-cover" />
+          ) : (
+            <Poster seed={`preview:${name}`} title={name || "Your event"} />
+          )}
+          <div className="mt-3 flex items-center justify-between">
+            <label className="label link-line cursor-pointer">
+              {poster ? "Change poster" : "+ Upload your own poster"}
+              <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => pickPoster(e.target.files?.[0])} />
+            </label>
+            {poster ? (
+              <button type="button" className="label text-mute link-line" onClick={() => setPoster(null)}>
+                Use the generated one
+              </button>
+            ) : (
+              <span className="label text-mute">Portrait works best</span>
+            )}
+          </div>
           <div className="mt-6 space-y-4">
             {!address ? (
               <Button type="button" className="w-full" onClick={openSheet}>
