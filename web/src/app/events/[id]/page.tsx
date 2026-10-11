@@ -87,7 +87,7 @@ export default function EventPage() {
         <div className="lg:sticky lg:top-36 lg:self-start">
           {event.meta.poster ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={event.meta.poster} alt="" className="aspect-[3/4] w-full object-cover" />
+            <img src={event.meta.poster} alt="" className="aspect-[3/4] w-full bg-paper-2 object-contain" />
           ) : (
             <Poster seed={`${event.id}:${event.meta.name}`} title={event.meta.name} />
           )}
