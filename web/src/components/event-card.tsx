@@ -14,7 +14,7 @@ export function EventCard({ event, index }: { event: EventView; index: number })
         <div className="transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.03]">
           {event.meta.poster ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={event.meta.poster} alt="" className="aspect-[3/4] w-full bg-paper-2 object-contain" />
+            <img src={event.meta.poster} alt="" className="aspect-[3/4] w-full object-cover" />
           ) : (
             <Poster seed={`${event.id}:${event.meta.name}`} />
           )}

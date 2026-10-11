@@ -2,7 +2,7 @@ import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/lib/server/rate-limit";
 
-const MAX_BYTES = 1_500_000;
+const MAX_BYTES = 3_000_000;
 const TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/webp": "webp", "image/png": "png" };
 
 // Stores an event poster. The browser resizes it first, so anything large here is not from our form.

@@ -213,7 +213,7 @@ export default function NewEventPage() {
                 Use the generated one
               </button>
             ) : (
-              <span className="label text-mute">Portrait works best</span>
+              <span className="label text-mute">Cropped to 3:4 portrait</span>
             )}
           </div>
           <div className="mt-6 space-y-4">
