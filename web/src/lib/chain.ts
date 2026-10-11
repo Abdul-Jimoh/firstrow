@@ -11,8 +11,8 @@ const networks = {
   monadTestnet: {
     chain: monadTestnet,
     ausd: "0xa9012a055bd4e0eDfF8Ce09f960291C09D5322dC",
-    firstrow: "0x22af952Da57945201D6c38a4DF908dfB471387D5",
-    forwarder: "0xbE79BC1E6b5300F79f6d8b9cA9e9A90E28da43c5",
+    firstrow: "0xa0701766CEf8F7F42D919347A0227f4aD3ef6F58",
+    forwarder: "0x8071155E3c3621FD5fe9Eae19C79D5bA9a2a70Ac",
   },
 } as const satisfies Record<
   string,

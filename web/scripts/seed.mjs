@@ -4,7 +4,7 @@ import { createPublicClient, createWalletClient, http, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { monadTestnet } from "viem/chains";
 
-const FIRSTROW = "0x22af952Da57945201D6c38a4DF908dfB471387D5";
+const FIRSTROW = "0xa0701766CEf8F7F42D919347A0227f4aD3ef6F58";
 const abi = parseAbi([
   "struct EventParams { string metadataURI; uint64 startsAt; uint64 endsAt; uint64 saleStartsAt; uint64 presaleStartsAt; uint16 presaleMinShows; uint16 resaleCapBps; uint16 royaltyBps; }",
   "struct TierParams { uint128 price; uint32 supply; }",
@@ -25,6 +25,8 @@ const evening = (daysAhead, hour) => {
   return Math.floor(d.getTime() / 1000);
 };
 const usd = (n) => BigInt(Math.round(n * 1e6));
+// Days until the next Friday (never today).
+const nextFriday = (5 - new Date().getDay() + 7) % 7 || 7;
 
 const events = [
   {
@@ -70,7 +72,7 @@ const events = [
     venue: "Alliance Française",
     city: "Accra",
     description: "Nine short films from West African directors, and a Q&A that always runs long.",
-    start: evening(9, 19),
+    start: evening(nextFriday, 19),
     hours: 3,
     tiers: [["Standard", 6, 120], ["Student", 3, 60]],
   },

@@ -18,7 +18,7 @@ contracts:
       - event: "Resold(uint256 indexed eventId, uint256 indexed ticketId, address indexed buyer, address seller, uint256 price, uint256 royalty)"
 chains:
   - id: 10143 # Monad testnet
-    start_block: 70066203
+    start_block: 70096373
     contracts:
       - name: Firstrow
-        address: "0x22af952Da57945201D6c38a4DF908dfB471387D5"
+        address: "0xa0701766CEf8F7F42D919347A0227f4aD3ef6F58"
