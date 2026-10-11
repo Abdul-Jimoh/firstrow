@@ -6,6 +6,7 @@ import gsap from "gsap";
 import Link from "next/link";
 import { useRef } from "react";
 import { fetchEvents } from "@/lib/events";
+import { fetchTotals } from "@/lib/indexer";
 import { EventCard } from "./event-card";
 import { EASE, prefersReducedMotion, Reveal } from "./motion";
 import { RowMark } from "./row-mark";
@@ -222,6 +223,34 @@ export function Upcoming() {
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+// Live counts from the Envio indexer. Hidden when it isn't reachable.
+export function Totals() {
+  const { data } = useQuery({ queryKey: ["totals"], queryFn: fetchTotals, refetchInterval: 10_000 });
+  if (!data) return null;
+  const cells: [string, number][] = [
+    ["Events", data.events],
+    ["Tickets sold", data.ticketsSold],
+    ["Through the door", data.checkIns],
+    ["Supporters on record", data.supporters],
+  ];
+  return (
+    <section className="gutter pb-24 md:pb-36">
+      <div className="flex items-baseline justify-between border-b border-ink pb-4">
+        <p className="label">[04] On the record so far</p>
+        <p className="label hidden text-mute sm:block">Live from Monad, indexed by Envio</p>
+      </div>
+      <div className="grid grid-cols-2 gap-y-10 pt-10 md:grid-cols-4">
+        {cells.map(([label, value]) => (
+          <div key={label}>
+            <p className="display text-[clamp(3.5rem,8vw,7rem)] tabular-nums">{value.toLocaleString("en-US")}</p>
+            <p className="label mt-3 text-mute">{label}</p>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

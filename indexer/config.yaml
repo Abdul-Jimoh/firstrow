@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: firstrow-indexer
+description: Attendance history, supporters and sales for Firstrow on Monad
+disable_default_cross_chain: true
+field_selection:
+  transaction_fields:
+    - hash
+contracts:
+  - name: Firstrow
+    events:
+      - event: "EventCreated(uint256 indexed eventId, address indexed host, string metadataURI)"
+      - event: "EventCancelled(uint256 indexed eventId)"
+      - event: "TicketsPurchased(uint256 indexed eventId, address indexed buyer, uint256 tier, uint256 firstTicketId, uint256 quantity, uint256 paid)"
+      - event: "CheckedIn(uint256 indexed eventId, uint256 indexed ticketId, address indexed fan)"
+      - event: "SupporterRecorded(address indexed host, address indexed fan, uint256 shows, uint256 number)"
+      - event: "Refunded(uint256 indexed eventId, uint256 indexed ticketId, address indexed owner, uint256 amount)"
+      - event: "Resold(uint256 indexed eventId, uint256 indexed ticketId, address indexed buyer, address seller, uint256 price, uint256 royalty)"
+chains:
+  - id: 10143 # Monad testnet
+    start_block: 69924031
+    contracts:
+      - name: Firstrow
+        address: "0x2425e8e48Ba58b512ceb76CA6c01277E35623ADe"

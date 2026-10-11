@@ -1,0 +1,70 @@
+type Totals {
+  id: ID!
+  events: Int!
+  ticketsSold: Int!
+  checkIns: Int!
+  supporters: Int!
+  primaryVolume: BigInt!
+  resaleVolume: BigInt!
+  royalties: BigInt!
+  refunded: BigInt!
+}
+
+type Host {
+  id: ID!
+  events: Int!
+  ticketsSold: Int!
+  checkIns: Int!
+  supporters: Int!
+}
+
+type Event {
+  id: ID!
+  host: String! @index
+  metadataURI: String!
+  cancelled: Boolean!
+  ticketsSold: Int!
+  checkIns: Int!
+  createdAt: Int!
+}
+
+type Fan {
+  id: ID!
+  shows: Int!
+  hosts: Int!
+  firstShowAt: Int!
+  lastShowAt: Int!
+}
+
+# A fan's standing with one host: their supporter number and how many of the host's events they attended.
+type Supporter {
+  id: ID!
+  host: String! @index
+  fan: String! @index
+  number: Int!
+  shows: Int!
+  firstShowAt: Int!
+  lastShowAt: Int!
+}
+
+type CheckIn {
+  id: ID!
+  eventId: BigInt! @index
+  ticketId: BigInt!
+  host: String! @index
+  fan: String! @index
+  timestamp: Int!
+  txHash: String!
+}
+
+type Resale {
+  id: ID!
+  eventId: BigInt! @index
+  ticketId: BigInt!
+  seller: String!
+  buyer: String!
+  price: BigInt!
+  royalty: BigInt!
+  timestamp: Int!
+  txHash: String!
+}

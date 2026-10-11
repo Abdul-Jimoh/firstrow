@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -12,6 +12,7 @@ import { Shell } from "@/components/shell";
 import { Button, Notice, Stat } from "@/components/ui";
 import { dateLabel, formatAusd, phaseOf, timeLabel } from "@/lib/events";
 import { useEvent, useHostBalance } from "@/lib/hooks";
+import { fetchTopSupporters } from "@/lib/indexer";
 import { send } from "@/lib/signing";
 
 export default function ManageEventPage() {
@@ -21,6 +22,12 @@ export default function ManageEventPage() {
   const { data: balance } = useHostBalance(id);
   const { address, unlock } = useAccount();
   const queryClient = useQueryClient();
+  const { data: supporters } = useQuery({
+    queryKey: ["topSupporters", event?.host],
+    queryFn: () => fetchTopSupporters(event!.host),
+    enabled: !!event,
+    refetchInterval: 10_000,
+  });
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [doorLink, setDoorLink] = useState<string | null>(null);
@@ -161,6 +168,26 @@ export default function ManageEventPage() {
         <div className="mt-8">
           <Notice tone="error">{error}</Notice>
         </div>
+      )}
+
+      {supporters && supporters.length > 0 && (
+        <section className="mt-20">
+          <p className="label">[03] Your supporters</p>
+          <h2 className="headline mt-4 text-4xl">The people who keep showing up.</h2>
+          <div className="mt-6 border-t border-ink">
+            {supporters.map((s) => (
+              <Link key={s.fan} href={`/fans/${s.fan}`} className="grid grid-cols-[5rem_1fr_auto] items-baseline gap-4 border-b rule py-4">
+                <span className="headline text-2xl tabular-nums">{String(s.number).padStart(3, "0")}</span>
+                <span className="label">
+                  {s.fan.slice(0, 6)}…{s.fan.slice(-4)}
+                </span>
+                <span className="label text-mute">
+                  {s.shows} show{s.shows === 1 ? "" : "s"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       <div className="mt-16 border-t rule pt-6">

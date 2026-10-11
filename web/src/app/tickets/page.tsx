@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAccount } from "@/components/account";
 import { Reveal } from "@/components/motion";
+import { QR } from "@/components/qr";
 import { Shell } from "@/components/shell";
 import { TicketStub } from "@/components/ticket-stub";
 import { Button } from "@/components/ui";
@@ -33,6 +34,7 @@ export default function TicketsPage() {
   const { data: balance } = useAusd(address);
   const queryClient = useQueryClient();
   const [toppingUp, setToppingUp] = useState(false);
+  const [receiving, setReceiving] = useState(false);
 
   const byId = new Map((events ?? []).map((e) => [e.id, e]));
   const rows = (tickets ?? []).map((t) => ({ ticket: t, event: byId.get(t.eventId) })).filter((r) => r.event) as {
@@ -75,10 +77,31 @@ export default function TicketsPage() {
                 {toppingUp ? "Adding…" : "+ Add test dollars"}
               </button>
             )}
+            <button onClick={() => setReceiving((r) => !r)} className="label link-line">
+              {receiving ? "Hide" : "Add money"}
+            </button>
+            <Link href={`/fans/${address}`} className="label link-line">
+              Your record →
+            </Link>
             <button onClick={signOut} className="label ml-auto text-mute link-line">
               Sign out of this device
             </button>
           </div>
+
+          {receiving && (
+            <div className="mt-8 grid max-w-2xl items-center gap-6 bg-paper-2 p-6 sm:grid-cols-[10rem_1fr]">
+              <QR value={address} label="Your account address" className="w-40" />
+              <div>
+                <p className="headline text-2xl">Send AUSD on Monad to your account.</p>
+                <p className="mt-2 text-sm text-ink-2">
+                  From an exchange or another wallet. It arrives in under a second and shows up as your balance.
+                </p>
+                <button className="label mt-4 break-all text-left link-line" onClick={() => navigator.clipboard.writeText(address)}>
+                  {address} · copy
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="mt-14">
             {isLoading ? (
