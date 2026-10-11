@@ -123,6 +123,12 @@ function storeCredential(credential: StoredCredential | null) {
   listeners.forEach((l) => l());
 }
 
+// Fills in the display name on a device that signed in to an existing account.
+export function rememberName(name: string) {
+  const stored = storedCredential();
+  if (stored && stored.name !== name) storeCredential({ ...stored, name });
+}
+
 export function forget() {
   endSession();
   localStorage.removeItem(DOOR_KEYS_KEY);

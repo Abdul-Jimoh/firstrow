@@ -10,10 +10,11 @@ import { firstrowAbi } from "@/lib/abi";
 import { chain, network, publicClient } from "@/lib/chain";
 import { decodeEntry, doorMessage } from "@/lib/entry";
 import { useEvent } from "@/lib/hooks";
+import { fetchName } from "@/lib/profile";
 import { send } from "@/lib/signing";
 
 type Result =
-  | { kind: "ok"; admitted: number; tiers: string[]; supporterNumber: number; firstTime: boolean }
+  | { kind: "ok"; admitted: number; name: string | null; tiers: string[]; supporterNumber: number; firstTime: boolean }
   | { kind: "error"; message: string };
 
 const storageKey = (eventId: string) => `firstrow.door.${chain.id}.${eventId}`;
@@ -78,15 +79,14 @@ export default function DoorPage() {
           contracts: entry.ticketIds.map((id) => ({ address: network.firstrow, abi: firstrowAbi, functionName: "getTicket", args: [id] }) as const),
         });
         const fan = tickets[0].owner;
-        const supporter = await publicClient.readContract({
-          address: network.firstrow,
-          abi: firstrowAbi,
-          functionName: "supporter",
-          args: [event.host, fan],
-        });
+        const [supporter, name] = await Promise.all([
+          publicClient.readContract({ address: network.firstrow, abi: firstrowAbi, functionName: "supporter", args: [event.host, fan] }),
+          fetchName(fan),
+        ]);
         setResult({
           kind: "ok",
           admitted: entry.ticketIds.length,
+          name,
           tiers: tickets.map((t) => event.tiers[t.tier]?.name ?? ""),
           supporterNumber: supporter.number,
           firstTime: supporter.shows === 1,
@@ -179,7 +179,10 @@ export default function DoorPage() {
                 <p className="display text-[clamp(4rem,20vw,8rem)]">
                   Admit {result.admitted}
                 </p>
-                <p className="label mt-3">{result.tiers.join(" · ")}</p>
+                <p className="label mt-3">
+                  {result.name ? `${result.name} · ` : ""}
+                  {result.tiers.join(" · ")}
+                </p>
                 <p className="headline mt-6 text-2xl">
                   {result.firstTime ? "First show with you. " : ""}Supporter No. {String(result.supporterNumber).padStart(3, "0")}
                 </p>

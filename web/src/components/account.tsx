@@ -6,11 +6,13 @@ import {
   currentAccount,
   forget,
   PasskeyError,
+  rememberName,
   signIn as passkeySignIn,
   signUp as passkeySignUp,
   storedCredential,
   subscribeCredential,
 } from "@/lib/passkey";
+import { fetchName, saveProfile } from "@/lib/profile";
 
 type AccountContextValue = {
   address: Address | null;
@@ -36,12 +38,21 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const signUp = useCallback(async (displayName: string) => {
     const { account } = await passkeySignUp(displayName);
     setSheetOpen(false);
+    // Saved with the account so the name follows it to other devices. Not worth blocking sign-up on.
+    saveProfile(account, displayName).catch(() => {});
     return account;
   }, []);
 
   const signIn = useCallback(async () => {
-    const { account } = await passkeySignIn();
+    const { account, credential } = await passkeySignIn();
     setSheetOpen(false);
+    // A new device learns the name from the saved profile; a device that knows it saves it if that never happened.
+    fetchName(account.address)
+      .then((saved) => {
+        if (!credential.name && saved) rememberName(saved);
+        else if (credential.name && !saved) return saveProfile(account, credential.name);
+      })
+      .catch(() => {});
     return account;
   }, []);
 

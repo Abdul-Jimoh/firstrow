@@ -14,6 +14,7 @@ import { dateLabel, encodeMeta, formatAusd, phaseOf, timeLabel } from "@/lib/eve
 import { useEvent, useHostBalance } from "@/lib/hooks";
 import { fetchTopSupporters } from "@/lib/indexer";
 import { preparePoster, uploadPoster } from "@/lib/poster";
+import { fetchNames } from "@/lib/profile";
 import { send } from "@/lib/signing";
 
 export default function ManageEventPage() {
@@ -29,6 +30,8 @@ export default function ManageEventPage() {
     enabled: !!event,
     refetchInterval: 10_000,
   });
+  const fans = (supporters ?? []).map((s) => s.fan);
+  const { data: names } = useQuery({ queryKey: ["names", fans.join(",")], queryFn: () => fetchNames(fans), enabled: fans.length > 0 });
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [doorLink, setDoorLink] = useState<string | null>(null);
@@ -186,8 +189,8 @@ export default function ManageEventPage() {
             {supporters.map((s) => (
               <Link key={s.fan} href={`/fans/${s.fan}`} className="grid grid-cols-[5rem_1fr_auto] items-baseline gap-4 border-b rule py-4">
                 <span className="headline text-2xl tabular-nums">{String(s.number).padStart(3, "0")}</span>
-                <span className="label">
-                  {s.fan.slice(0, 6)}…{s.fan.slice(-4)}
+                <span className={names?.[s.fan.toLowerCase()] ? "headline text-xl" : "label"}>
+                  {names?.[s.fan.toLowerCase()] ?? `${s.fan.slice(0, 6)}…${s.fan.slice(-4)}`}
                 </span>
                 <span className="label text-mute">
                   {s.shows} show{s.shows === 1 ? "" : "s"}

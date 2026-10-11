@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { EventCard } from "@/components/event-card";
 import { Reveal } from "@/components/motion";
@@ -20,7 +21,10 @@ export default function EventsPage() {
         <Reveal as="h1" lines immediate className="display text-[clamp(3.5rem,10vw,9rem)]">
           What&apos;s on
         </Reveal>
-        <div className="flex gap-5 pb-3">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pb-3">
+          <Link href="/host/new" className="label border-b border-ink pb-1">
+            + Host an event
+          </Link>
           {(["upcoming", "past"] as const).map((v) => (
             <button key={v} onClick={() => setView(v)} className={`label ${view === v ? "" : "text-mute"}`}>
               {view === v ? "■" : "□"} {v}

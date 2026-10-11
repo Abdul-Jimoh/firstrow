@@ -174,7 +174,7 @@ const rules = [
   ["Resale at face value", "Tickets can change hands, but only through Firstrow, at the price the host allows, with a cut back to the host."],
   ["Hosts can't fake a check-in", "Every scan carries the ticket holder's own signature. No scan, no payout."],
   ["Refund yourself", "Cancelled, or you never got in? Your money comes back from the contract, not from a support inbox."],
-  ["No seed phrase, no gas, no app", "A passkey is your account. Firstrow covers the network fees. It's just a website."],
+  ["No seed phrase, no gas, no app", "A passkey is your account. Firstrow covers the network fees."],
 ];
 
 export function Rules() {

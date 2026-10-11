@@ -12,6 +12,7 @@ import { explorer } from "@/lib/chain";
 import { dateLabel } from "@/lib/events";
 import { useEvents } from "@/lib/hooks";
 import { fetchFanRecord } from "@/lib/indexer";
+import { fetchName } from "@/lib/profile";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const no = (n: number) => String(n).padStart(3, "0");
@@ -23,6 +24,7 @@ export default function FanPage() {
   const mine = !!fan && fan.toLowerCase() === address?.toLowerCase();
   const { data: record, isLoading } = useQuery({ queryKey: ["fan", fan], queryFn: () => fetchFanRecord(fan!), enabled: !!fan });
   const { data: events } = useEvents();
+  const { data: savedName } = useQuery({ queryKey: ["name", fan], queryFn: () => fetchName(fan!), enabled: !!fan && !mine });
 
   if (!fan) return <Shell><h1 className="display text-6xl">No such fan.</h1></Shell>;
 
@@ -36,7 +38,7 @@ export default function FanPage() {
     <Shell>
       <p className="label text-mute">[ Record ] {short(fan)}</p>
       <Reveal as="h1" lines immediate className="display mt-6 text-[clamp(3.5rem,10vw,9rem)]">
-        {mine ? (name ? `${name}'s record` : "Your record") : "On the record"}
+        {mine ? (name ? `${name}'s record` : "Your record") : savedName ? `${savedName}'s record` : "On the record"}
       </Reveal>
       <p className="lede mt-6 max-w-2xl text-ink-2">
         Every show checked in at the door, written to Monad. It can&apos;t be bought, faked or transferred.
