@@ -34,7 +34,7 @@ export function Nav() {
   const secondary = scrolled ? "hidden" : "hidden opacity-70 sm:block";
 
   // The door scanner is a full-screen tool with its own header.
-  if (pathname.startsWith("/door") || pathname.startsWith("/lab")) return null;
+  if (pathname.startsWith("/door")) return null;
 
   return (
     <header
