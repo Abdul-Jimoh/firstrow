@@ -11,7 +11,9 @@ export default function EventsPage() {
   const { data, isLoading } = useEvents();
   const [view, setView] = useState<"upcoming" | "past">("upcoming");
   const now = new Date();
+  // A cancelled event nobody bought a ticket for is a withdrawn listing, so it isn't shown at all.
   const events = (data ?? [])
+    .filter((e) => !(e.cancelled && e.sold === 0))
     .filter((e) => (view === "upcoming" ? e.endsAt > now && !e.cancelled : e.endsAt <= now || e.cancelled))
     .sort((a, b) => (view === "upcoming" ? a.startsAt.getTime() - b.startsAt.getTime() : b.startsAt.getTime() - a.startsAt.getTime()));
 
