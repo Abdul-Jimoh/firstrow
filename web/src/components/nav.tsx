@@ -54,7 +54,7 @@ export function Nav() {
 
         <div className="flex flex-col items-end gap-1.5">
           {ready && (address ? (
-            <Link href="/tickets" className="label rounded-full border border-current px-4 py-2">
+            <Link href="/tickets" className="label max-w-[11rem] truncate rounded-full border border-current px-4 py-2">
               {name || `${address.slice(0, 6)}…${address.slice(-4)}`}
             </Link>
           ) : (

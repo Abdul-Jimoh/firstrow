@@ -143,7 +143,7 @@ export default function TicketPage() {
       </p>
 
       <div className="mt-8 grid gap-14 lg:grid-cols-2">
-        <div>
+        <div className="min-w-0">
           <TicketStub
             title={event.meta.name}
             date={`${dateLabel(event.startsAt)}, ${timeLabel(event.startsAt)}`}
@@ -192,7 +192,8 @@ export default function TicketPage() {
             <div className="space-y-5">
               <h2 className="headline text-4xl">At the door?</h2>
               <p className="text-ink-2">
-                Unlock your entry code with your passkey. It covers all {groupIds.length} of your tickets for this event.
+                Unlock your entry code with your passkey.
+                {groupIds.length > 1 && ` One code covers all ${groupIds.length} of your tickets for this event.`}
                 {!checkInOpen && ` Doors open ${dateLabel(event.startsAt)} at ${timeLabel(event.startsAt)}; the code works from 6 hours before.`}
               </p>
               <Button className="w-full" busy={busy === "code"} onClick={showCode}>

@@ -116,7 +116,7 @@ export default function TicketsPage() {
             ) : (
               <div className="grid gap-8 lg:grid-cols-2">
                 {rows.map(({ ticket, event }) => (
-                  <Link key={ticket.id} href={`/tickets/${ticket.id}`} className="block transition-transform duration-500 hover:-translate-y-1">
+                  <Link key={ticket.id} href={`/tickets/${ticket.id}`} className="block min-w-0 transition-transform duration-500 hover:-translate-y-1">
                     <TicketStub
                       title={event.meta.name}
                       date={`${dateLabel(event.startsAt)}, ${timeLabel(event.startsAt)}`}

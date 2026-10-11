@@ -103,9 +103,16 @@ export default function DoorPage() {
     [door, event],
   );
 
+  // The camera starts once. Scans go through a ref to the latest handler, so fresh event data (it refetches
+  // every few seconds for the counter) never restarts the camera.
+  const latestHandle = useRef(handle);
+  useEffect(() => {
+    latestHandle.current = handle;
+  }, [handle]);
+
   useEffect(() => {
     if (!video.current || !paired) return;
-    const s = new QrScanner(video.current, (r) => handle(r.data), {
+    const s = new QrScanner(video.current, (r) => latestHandle.current(r.data), {
       preferredCamera: "environment",
       highlightScanRegion: false,
       maxScansPerSecond: 8,
@@ -129,7 +136,7 @@ export default function DoorPage() {
       s.destroy();
       scanner.current = null;
     };
-  }, [paired, handle]);
+  }, [paired]);
 
   useEffect(() => {
     if (!result) return;

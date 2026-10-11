@@ -14,7 +14,7 @@ type Props = {
 // A paper ticket: main body, perforation, stub.
 export function TicketStub({ title, date, venue, holder, tier, number, status, className = "" }: Props) {
   return (
-    <div className={`relative flex bg-paper-2 text-ink shadow-[0_30px_60px_-30px_rgba(21,20,18,0.45)] ${className}`}>
+    <div className={`relative flex min-w-0 bg-paper-2 text-ink shadow-[0_30px_60px_-30px_rgba(21,20,18,0.45)] ${className}`}>
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-8 p-5 sm:p-6">
         <div className="flex items-center justify-between gap-4">
           <span className="label">Firstrow</span>
@@ -26,12 +26,12 @@ export function TicketStub({ title, date, venue, holder, tier, number, status, c
             {date} — {venue}
           </p>
         </div>
-        <div className="flex gap-8">
-          <div>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="min-w-0">
             <p className="label text-mute">Holder</p>
             <p className="mt-1 truncate">{holder}</p>
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="label text-mute">Tier</p>
             <p className="mt-1 truncate">{tier}</p>
           </div>
