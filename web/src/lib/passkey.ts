@@ -32,8 +32,12 @@ let session: Secp256k1SigningSession | null = null;
 let account: LocalAccount | null = null;
 let idleTimer: ReturnType<typeof setTimeout> | undefined;
 
+const PRODUCTION_DOMAIN = "firstrow.site";
+
+// Passkeys are bound to this id for good. Using the bare domain keeps them valid on www and any subdomain.
 function rpId() {
-  return window.location.hostname;
+  const host = window.location.hostname;
+  return host === PRODUCTION_DOMAIN || host.endsWith(`.${PRODUCTION_DOMAIN}`) ? PRODUCTION_DOMAIN : host;
 }
 
 // Same derivation as Mera's docs, so the account can be exported as a standard 24-word recovery phrase.
