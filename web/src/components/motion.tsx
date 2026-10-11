@@ -64,15 +64,18 @@ export function Reveal({ children, className, as: Tag = "div", delay = 0, lines,
           type: "lines",
           mask: "lines",
           autoSplit: true,
-          onSplit: (split) =>
-            gsap.from(split.lines, {
+          onSplit: (split) => {
+            // Room for descenders and overhangs, which the line masks would otherwise clip.
+            gsap.set(split.masks, { paddingBottom: "0.16em", marginBottom: "-0.16em", paddingInline: "0.08em", marginInline: "-0.08em" });
+            return gsap.from(split.lines, {
               yPercent: 110,
               duration: 1.2,
               ease: EASE,
               stagger: 0.08,
               delay,
               scrollTrigger: trigger,
-            }),
+            });
+          },
         });
         return;
       }

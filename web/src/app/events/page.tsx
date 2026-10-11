@@ -16,7 +16,7 @@ export default function EventsPage() {
     <Shell>
       <div className="flex flex-wrap items-end justify-between gap-6">
         <Reveal as="h1" lines immediate className="display text-[clamp(3.5rem,10vw,9rem)]">
-          What&apos;s <span className="accent">on</span>
+          What&apos;s on
         </Reveal>
         <div className="flex gap-5 pb-3">
           {(["upcoming", "past"] as const).map((v) => (

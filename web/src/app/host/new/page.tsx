@@ -77,7 +77,7 @@ export default function NewEventPage() {
   return (
     <Shell>
       <Reveal as="h1" lines immediate className="display text-[clamp(3.5rem,10vw,9rem)]">
-        Host <span className="accent">something.</span>
+        Host something.
       </Reveal>
 
       <form onSubmit={submit} className="mt-16 grid gap-16 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)]">

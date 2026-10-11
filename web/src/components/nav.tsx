@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAccount } from "./account";
 import { BlockClock } from "./block-clock";
+import { Logo } from "./logo";
 
 const links = [
   { href: "/events", label: "Events" },
@@ -19,8 +20,9 @@ export function Nav() {
     <header className="gutter pointer-events-none fixed inset-x-0 top-0 z-40 pt-5 text-paper mix-blend-difference">
       <div className="flex items-start justify-between gap-6">
         <div className="pointer-events-auto">
-          <Link href="/" className="headline text-2xl tracking-tight">
-            Firstrow<sup className="ml-0.5 align-super text-[0.5em]">®</sup>
+          <Link href="/" className="headline flex items-center gap-2.5 text-2xl tracking-tight">
+            <Logo mono className="size-7" />
+            Firstrow
           </Link>
           <p className="label mt-1 hidden opacity-70 sm:block">Tickets tied to a person</p>
         </div>

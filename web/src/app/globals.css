@@ -61,11 +61,12 @@
   text-transform: uppercase;
 }
 
-@utility accent {
+@utility lede {
   font-family: var(--font-serif);
-  font-style: italic;
   font-weight: 400;
-  letter-spacing: -0.02em;
+  font-size: clamp(1.375rem, 2vw, 1.75rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 @utility gutter {

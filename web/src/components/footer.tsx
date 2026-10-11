@@ -9,7 +9,7 @@ export function Footer() {
         <h2 className="display text-[clamp(3rem,8vw,7.5rem)]">
           Ready to host
           <br />
-          something <span className="accent">real</span>?
+          something real?
         </h2>
         <div className="flex flex-col justify-end gap-3 md:items-end">
           {[

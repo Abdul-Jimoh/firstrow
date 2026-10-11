@@ -37,10 +37,10 @@ export function Hero() {
             <p className="label text-ink-2">[ Season 01 — live on Monad testnet ]</p>
           </Reveal>
           <Reveal as="h1" lines immediate delay={0.1} className="display mt-6 text-[clamp(3.6rem,11vw,10.5rem)]">
-            Be in the <span className="accent">first</span> row.
+            Be in the first row.
           </Reveal>
           <Reveal immediate delay={0.35}>
-            <p className="mt-8 max-w-xl text-lg text-ink-2 md:text-xl">
+            <p className="lede mt-8 max-w-xl text-ink-2">
               Tickets tied to you, not an email. Your money waits in escrow until you&apos;re through the door, and every
               show you make it to goes on the record, so hosts can look after the people who were there first.
             </p>
@@ -112,11 +112,11 @@ export function HowItWorks() {
           <p className="label hidden opacity-60 sm:block">Money moves when people do</p>
         </div>
         <Reveal as="h2" lines className="display mt-10 max-w-5xl text-[clamp(2.75rem,7vw,6.5rem)]">
-          The money waits <span className="accent">at the door.</span>
+          The money waits at the door.
         </Reveal>
         <div className="mt-20 grid gap-px bg-paper/15 md:grid-cols-3">
           {steps.map((s, i) => (
-            <Reveal key={s.title} delay={i * 0.08} className="bg-ink pt-8 pr-8 pb-4 md:pb-0">
+            <Reveal key={s.title} delay={i * 0.08} className="bg-ink py-8 md:px-10 md:first:pl-0 md:last:pr-0">
               <p className="display text-7xl tabular-nums text-paper/25">{String(i + 1).padStart(2, "0")}</p>
               <p className="headline mt-8 text-2xl">{s.title}</p>
               <p className="mt-3 max-w-sm text-paper/70">{s.body}</p>
@@ -152,11 +152,11 @@ export function Supporters() {
       <p className="label">[02] Early supporters</p>
       <div className="mt-10 grid items-end gap-12 md:grid-cols-[1.2fr_1fr]">
         <p className="display text-[clamp(7rem,26vw,24rem)] leading-[0.8] tabular-nums">
-          <span className="accent mr-4 text-[0.35em] align-top">No.</span>
+          <span className="mr-4 align-top text-[0.3em] tracking-normal">No.</span>
           <span data-count>001</span>
         </p>
         <div className="max-w-md pb-6">
-          <Reveal as="p" className="headline text-3xl md:text-4xl">
+          <Reveal as="p" className="lede text-3xl md:text-4xl">
             The first person through the door at a host&apos;s first show is their supporter No.&nbsp;001. For good.
           </Reveal>
           <Reveal as="p" delay={0.1} className="mt-6 text-ink-2">

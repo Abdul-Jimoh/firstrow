@@ -69,9 +69,9 @@ export function SignInSheet() {
         </div>
 
         <h2 id="sheet-title" className="display mt-8 text-[clamp(2.75rem,9vw,4rem)]" data-stagger>
-          Your face is <span className="accent">your</span> ticket.
+          Your face is your ticket.
         </h2>
-        <p className="mt-4 max-w-sm text-ink-2" data-stagger>
+        <p className="lede mt-4 max-w-sm text-ink-2" data-stagger>
           No password, no seed phrase, no app. Firstrow uses the passkey already on your phone or laptop.
         </p>
 

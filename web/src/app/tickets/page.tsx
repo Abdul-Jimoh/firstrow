@@ -51,7 +51,7 @@ export default function TicketsPage() {
   return (
     <Shell>
       <Reveal as="h1" lines immediate className="display text-[clamp(3.5rem,10vw,9rem)]">
-        My <span className="accent">tickets</span>
+        My tickets
       </Reveal>
 
       {!ready ? null : !address ? (

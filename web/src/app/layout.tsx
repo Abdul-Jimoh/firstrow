@@ -9,7 +9,6 @@ const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument-serif",
   subsets: ["latin"],
   weight: "400",
-  style: ["italic"],
 });
 
 export const metadata: Metadata = {
@@ -26,7 +25,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${interTight.variable} ${geistMono.variable} ${instrumentSerif.variable}`}>
-      <body className="min-h-dvh">
+      <body className="min-h-dvh" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

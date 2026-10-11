@@ -164,7 +164,7 @@ export default function TicketPage() {
             <div ref={welcome} className="overflow-hidden">
               <div data-welcome className="bg-ink p-8 text-paper">
                 <p data-welcome-line className="display text-[clamp(3.5rem,9vw,6rem)]">
-                  Welcome <span className="accent">in.</span>
+                  Welcome in.
                 </p>
                 {supporter && supporter.number > 0 && (
                   <p data-welcome-line className="mt-6 text-lg text-paper/80">

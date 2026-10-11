@@ -17,7 +17,7 @@ export default function HostPage() {
     <Shell>
       <div className="flex flex-wrap items-end justify-between gap-8">
         <Reveal as="h1" lines immediate className="display text-[clamp(3.5rem,10vw,9rem)]">
-          Your <span className="accent">events</span>
+          Your events
         </Reveal>
         <Link href="/host/new" className="label border-b border-ink pb-2">
           + New event

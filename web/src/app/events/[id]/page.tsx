@@ -123,7 +123,7 @@ export default function EventPage() {
 
           {address && shows > 0 && (
             <div className="mt-10 flex items-baseline gap-4 bg-ink px-5 py-4 text-paper">
-              <span className="accent text-3xl">No.</span>
+              <span className="headline text-3xl">No.</span>
               <span className="display text-5xl tabular-nums">{String(supporter!.number).padStart(3, "0")}</span>
               <span className="label opacity-70">
                 Your supporter number with this host · {shows} show{shows === 1 ? "" : "s"}
