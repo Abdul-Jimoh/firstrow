@@ -80,8 +80,8 @@ step("door phone paired");
 // Fan
 const fan = await withPasskey(browser, { width: 390, height: 844 });
 await signUp(fan, "E2E Fan");
-await fan.getByRole("button", { name: "+ Add test dollars" }).click();
-await fan.getByText(/Balance \$100/).waitFor({ timeout: 60_000 });
+await fan.getByRole("button", { name: /Add \$100 test dollars/ }).click();
+await fan.getByText("$100", { exact: true }).waitFor({ timeout: 60_000 });
 step("fan signed up and topped up");
 
 await fan.goto(`${base}/events/${eventId}`);

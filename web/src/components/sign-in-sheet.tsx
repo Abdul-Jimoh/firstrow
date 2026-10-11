@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { errorMessage, useAccount } from "./account";
 import { EASE, prefersReducedMotion, useLenis } from "./motion";
+import { Button, Notice } from "./ui";
 
 export function SignInSheet() {
   const { sheetOpen, closeSheet, signUp, signIn } = useAccount();
@@ -90,30 +91,28 @@ export function SignInSheet() {
               placeholder="Ada Obi"
               className="mt-2 w-full border-b border-ink bg-transparent pb-2 text-2xl outline-none placeholder:text-stone"
             />
-            <button type="submit" disabled={busy || !name.trim()} className="mt-8 flex w-full items-center justify-between bg-ink px-5 py-4 text-paper transition-opacity disabled:opacity-40">
+            <Button type="submit" busy={busy} disabled={!name.trim()} className="mt-8 w-full">
               <span className="text-lg">{busy ? "Waiting for your passkey…" : "Create my pass"}</span>
-              <span aria-hidden>→</span>
-            </button>
-            <button type="button" onClick={() => setMode("existing")} className="label mt-5 text-ink-2 link-line">
+            </Button>
+            <button type="button" onClick={() => setMode("existing")} className="label mt-5 block text-ink link-line">
               I already have one
             </button>
           </form>
         ) : (
           <div className="mt-8" data-stagger>
-            <button onClick={() => run(signIn)} disabled={busy} className="flex w-full items-center justify-between bg-ink px-5 py-4 text-paper disabled:opacity-40">
+            <Button onClick={() => run(signIn)} busy={busy} className="w-full">
               <span className="text-lg">{busy ? "Waiting for your passkey…" : "Sign in with passkey"}</span>
-              <span aria-hidden>→</span>
-            </button>
-            <button type="button" onClick={() => setMode("create")} className="label mt-5 text-ink-2 link-line">
+            </Button>
+            <button type="button" onClick={() => setMode("create")} className="label mt-5 block text-ink link-line">
               New here? Create a pass
             </button>
           </div>
         )}
 
         {error && (
-          <p role="alert" className="mt-5 border-l-2 border-signal pl-3 text-sm text-ink-2">
-            {error}
-          </p>
+          <div className="mt-5">
+            <Notice tone="error">{error}</Notice>
+          </div>
         )}
       </div>
     </div>

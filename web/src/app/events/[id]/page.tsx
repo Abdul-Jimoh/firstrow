@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -8,10 +7,10 @@ import { errorMessage, useAccount } from "@/components/account";
 import { Reveal } from "@/components/motion";
 import { Poster } from "@/components/poster";
 import { Shell } from "@/components/shell";
-import { Button, Notice } from "@/components/ui";
+import { Button, Notice, Panel, Pill, SmallButton, SmallLink, type Tone } from "@/components/ui";
 import { buyResale, buyTickets } from "@/lib/actions";
 import { chain } from "@/lib/chain";
-import { dateLabel, formatAusd, phaseOf, timeLabel, TicketStatus } from "@/lib/events";
+import { dateLabel, formatAusd, phaseOf, soldOut, timeLabel, TicketStatus } from "@/lib/events";
 import { useAusd, useEvent, useListings, useSupporter, useTickets } from "@/lib/hooks";
 
 export default function EventPage() {
@@ -72,190 +71,258 @@ export default function EventPage() {
     }
   }
 
-  const phaseLabel = {
-    cancelled: "Cancelled",
-    upcoming: `On sale ${dateLabel(event.saleStartsAt)}`,
-    presale: `Presale for returning fans`,
-    "on-sale": "On sale",
-    live: "Happening now",
-    ended: "Ended",
-  }[phase];
+  const sold = soldOut(event);
+  const status: { label: string; tone: Tone } =
+    phase === "cancelled"
+      ? { label: "Cancelled", tone: "stop" }
+      : phase === "ended"
+        ? { label: "Ended", tone: "done" }
+        : sold
+          ? { label: "Sold out", tone: "stop" }
+          : phase === "live"
+            ? { label: "Happening now", tone: "go" }
+            : phase === "on-sale"
+              ? { label: "On sale", tone: "go" }
+              : phase === "presale"
+                ? { label: "Presale for returning fans", tone: "warn" }
+                : { label: `On sale ${dateLabel(event.saleStartsAt)}`, tone: "done" };
+
+  const open = phase !== "cancelled" && phase !== "ended";
+  const resale = open ? (listings ?? []).filter((l) => l.seller.toLowerCase() !== address?.toLowerCase()) : [];
+  const ownListings = open ? (listings ?? []).filter((l) => l.seller.toLowerCase() === address?.toLowerCase()) : [];
+  const cheapest = resale.reduce<bigint | null>((min, l) => (min === null || l.price < min ? l.price : min), null);
+  const valid = mine.filter((t) => t.status === TicketStatus.Valid);
 
   return (
     <Shell>
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
-        <div className="lg:sticky lg:top-36 lg:self-start">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-20">
+        <div className="lg:sticky lg:top-28 lg:self-start">
           {event.meta.poster ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={event.meta.poster} alt="" className="aspect-[3/4] w-full object-cover" />
+            <img src={event.meta.poster} alt="" className="aspect-[3/4] w-full bg-paper-2 object-cover" />
           ) : (
             <Poster seed={`${event.id}:${event.meta.name}`} title={event.meta.name} />
           )}
         </div>
 
-        <div>
-          <p className="label flex items-center gap-3">
-            <span className={`inline-block size-2 rounded-full ${phase === "on-sale" || phase === "live" ? "bg-signal" : "bg-mute"}`} />
-            {phaseLabel}
-          </p>
-          <Reveal as="h1" lines immediate className="display mt-6 text-[clamp(3rem,7vw,6.5rem)]">
+        <div className="min-w-0">
+          <Pill tone={status.tone}>{status.label}</Pill>
+          <Reveal as="h1" lines immediate className="display mt-5 text-[clamp(3rem,7vw,6.5rem)]">
             {event.meta.name}
           </Reveal>
 
-          <dl className="mt-10 grid grid-cols-2 gap-6 border-t border-ink pt-6 sm:grid-cols-3">
+          {valid.length > 0 && !done && (
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-4 bg-go-soft p-4 text-go">
+              <p className="font-medium">
+                You have {valid.length} ticket{valid.length === 1 ? "" : "s"} for this.
+              </p>
+              <SmallLink href={`/tickets/${valid[0].id}`} variant="ink">
+                Open my ticket →
+              </SmallLink>
+            </div>
+          )}
+
+          <dl className="mt-8 grid grid-cols-2 gap-6 border-t-2 border-ink pt-6 sm:grid-cols-3">
             <div>
-              <dt className="label text-mute">Date</dt>
-              <dd className="mt-1">{dateLabel(event.startsAt)}</dd>
+              <dt className="label text-ink-2">Date</dt>
+              <dd className="mt-1 font-medium">{dateLabel(event.startsAt)}</dd>
             </div>
             <div>
-              <dt className="label text-mute">Doors</dt>
-              <dd className="mt-1">
+              <dt className="label text-ink-2">Doors</dt>
+              <dd className="mt-1 font-medium">
                 {timeLabel(event.startsAt)}–{timeLabel(event.endsAt)}
               </dd>
             </div>
-            <div>
-              <dt className="label text-mute">Where</dt>
-              <dd className="mt-1">{[event.meta.venue, event.meta.city].filter(Boolean).join(", ") || "TBA"}</dd>
+            <div className="col-span-2 sm:col-span-1">
+              <dt className="label text-ink-2">Where</dt>
+              <dd className="mt-1 font-medium">{[event.meta.venue, event.meta.city].filter(Boolean).join(", ") || "TBA"}</dd>
             </div>
           </dl>
 
-          {event.meta.description && <p className="mt-10 max-w-2xl text-lg whitespace-pre-line text-ink-2">{event.meta.description}</p>}
+          {event.meta.description && <p className="lede mt-8 max-w-2xl whitespace-pre-line text-ink-2">{event.meta.description}</p>}
 
           {address && shows > 0 && (
-            <div className="mt-10 flex items-baseline gap-4 bg-ink px-5 py-4 text-paper">
-              <span className="headline text-3xl">No.</span>
-              <span className="display text-5xl tabular-nums">{String(supporter!.number).padStart(3, "0")}</span>
-              <span className="label opacity-70">
+            <div className="mt-8 flex flex-wrap items-baseline gap-x-4 gap-y-1 bg-ink px-5 py-4 text-paper">
+              <span className="display text-5xl tabular-nums">No. {String(supporter!.number).padStart(3, "0")}</span>
+              <span className="label text-paper/70">
                 Your supporter number with this host · {shows} show{shows === 1 ? "" : "s"}
               </span>
             </div>
           )}
 
-          <section className="mt-14">
-            <p className="label">[ Tickets ]</p>
-            <div className="mt-4 border-t border-ink">
-              {event.tiers.map((t, i) => {
-                const remaining = t.supply - t.sold;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setTier(i)}
-                    disabled={remaining <= 0}
-                    className={`grid w-full grid-cols-[1.5rem_1fr_auto] items-baseline gap-4 border-b rule py-5 text-left disabled:opacity-40 ${tier === i ? "" : "text-ink-2"}`}
-                  >
-                    <span className="label">{tier === i ? "■" : "□"}</span>
-                    <span>
-                      <span className="headline text-2xl">{t.name}</span>
-                      <span className="label ml-3 text-mute">{remaining <= 0 ? "Sold out" : `${remaining} left`}</span>
-                    </span>
-                    <span className="headline text-2xl tabular-nums">{formatAusd(t.price)}</span>
-                  </button>
-                );
-              })}
-            </div>
+          {open && (
+            <section id="tickets" className="mt-12 scroll-mt-28">
+              <h2 className="headline text-3xl">Tickets</h2>
 
-            {event.presaleMinShows > 0 && phase === "presale" && (
-              <div className="mt-6">
-                <Notice tone={presaleOk ? "ok" : "info"}>
-                  {presaleOk
-                    ? `You're in the presale: you've been to ${shows} of this host's shows.`
-                    : `Presale is for fans who've been to ${event.presaleMinShows}+ of this host's shows. Public sale opens ${dateLabel(event.saleStartsAt)} at ${timeLabel(event.saleStartsAt)}.`}
-                </Notice>
-              </div>
-            )}
+              {cheapest !== null && (
+                <a href="#resale" className="mt-4 flex items-center justify-between gap-4 bg-warn-soft px-4 py-3 text-warn">
+                  <span className="font-medium">
+                    {resale.length} resale ticket{resale.length === 1 ? "" : "s"} from fans, from {formatAusd(cheapest)}
+                  </span>
+                  <span className="label">See below ↓</span>
+                </a>
+              )}
 
-            {done ? (
-              <div className="mt-8 bg-ink p-6 text-paper">
-                <p className="display text-5xl">You&apos;re in.</p>
-                <p className="mt-3 text-paper/70">Your ticket is tied to your passkey. Show it at the door from My tickets.</p>
-                <Link href="/tickets" className="label mt-6 inline-block link-line">
-                  Go to my tickets →
-                </Link>
-              </div>
-            ) : canBuy && left > 0 ? (
-              <div className="mt-8 space-y-5">
-                <div className="flex items-center justify-between">
-                  <span className="label text-mute">Quantity</span>
-                  <div className="flex items-center gap-5">
-                    <button className="label size-9 border border-ink" onClick={() => setQuantity((q) => Math.max(1, q - 1))} aria-label="Fewer">
-                      −
-                    </button>
-                    <span className="headline w-6 text-center text-2xl tabular-nums">{quantity}</span>
+              <div className="mt-5 space-y-2" role="radiogroup" aria-label="Ticket tier">
+                {event.tiers.map((t, i) => {
+                  const remaining = t.supply - t.sold;
+                  const selected = tier === i && remaining > 0;
+                  return (
                     <button
-                      className="label size-9 border border-ink"
-                      onClick={() => setQuantity((q) => Math.min(10, left, q + 1))}
-                      aria-label="More"
+                      key={i}
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => {
+                        setTier(i);
+                        setQuantity(1);
+                      }}
+                      disabled={remaining <= 0}
+                      className={`grid w-full grid-cols-[1.25rem_1fr_auto] items-center gap-4 border-2 px-4 py-4 text-left transition-colors disabled:cursor-not-allowed ${
+                        selected ? "border-ink bg-paper-2" : "border-ink/15 hover:border-ink/50"
+                      } ${remaining <= 0 ? "opacity-60" : ""}`}
                     >
-                      +
+                      <span className={`size-5 rounded-full border-2 ${selected ? "border-ink bg-signal shadow-[inset_0_0_0_3px_var(--color-paper-2)]" : "border-ink/40"}`} />
+                      <span className="min-w-0">
+                        <span className="headline block text-xl sm:text-2xl">{t.name}</span>
+                        <span className={`label mt-1 block ${remaining <= 0 ? "text-stop" : remaining <= 10 ? "font-medium text-warn" : "text-ink-2"}`}>
+                          {remaining <= 0 ? "Sold out" : remaining <= 10 ? `Only ${remaining} left` : `${remaining} left`}
+                        </span>
+                      </span>
+                      <span className="headline text-2xl tabular-nums">{formatAusd(t.price)}</span>
                     </button>
-                  </div>
+                  );
+                })}
+              </div>
+
+              {event.presaleMinShows > 0 && phase === "presale" && (
+                <div className="mt-5">
+                  <Notice tone={presaleOk ? "ok" : "warn"}>
+                    {presaleOk
+                      ? `You're in the presale: you've been to ${shows} of this host's shows.`
+                      : `Presale is for fans who've been to ${event.presaleMinShows}+ of this host's shows. Public sale opens ${dateLabel(event.saleStartsAt)} at ${timeLabel(event.saleStartsAt)}.`}
+                  </Notice>
                 </div>
-                {!address ? (
-                  <Button className="w-full" onClick={openSheet}>
-                    <span className="text-lg">Sign in to buy · {formatAusd(total)}</span>
-                  </Button>
-                ) : short ? (
-                  <>
-                    <Notice>You need {formatAusd(total, { free: false })} in your balance. You have {formatAusd(balance ?? 0n, { free: false })}.</Notice>
-                    {chain.testnet && (
-                      <Button className="w-full" variant="line" busy={busy === "faucet"} onClick={topUp}>
-                        <span className="text-lg">Add $100 test dollars</span>
-                      </Button>
-                    )}
-                  </>
-                ) : (
-                  <Button
-                    className="w-full"
-                    busy={busy === "buy"}
-                    onClick={() => run("buy", async () => buyTickets(await unlock(), event, tier, quantity))}
-                  >
-                    <span className="text-lg">{busy === "buy" ? "Confirm with your passkey…" : `Buy ${quantity} · ${formatAusd(total)}`}</span>
-                  </Button>
-                )}
-                <p className="label text-mute">
-                  Held in escrow until you&apos;re checked in · refundable if cancelled · no fees for you
-                </p>
-              </div>
-            ) : null}
+              )}
 
-            {error && (
-              <div className="mt-5">
-                <Notice tone="error">{error}</Notice>
-              </div>
-            )}
-
-            {mine.length > 0 && !done && (
-              <Link href="/tickets" className="label mt-6 inline-block link-line">
-                You have {mine.length} ticket{mine.length === 1 ? "" : "s"} for this →
-              </Link>
-            )}
-          </section>
-
-          {listings && listings.length > 0 && (
-            <section className="mt-16">
-              <p className="label">[ Resale · capped at {event.resaleCapBps === 0 ? "face value" : `+${event.resaleCapBps / 100}%`} ]</p>
-              <div className="mt-4 border-t border-ink">
-                {listings.map((l) => (
-                  <div key={l.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 border-b rule py-4">
-                    <span>
-                      {event.tiers[l.tier]?.name} <span className="label text-mute">#{l.id.toString()}</span>
-                    </span>
-                    <span className="headline text-xl tabular-nums">{formatAusd(l.price)}</span>
-                    {l.seller.toLowerCase() === address?.toLowerCase() ? (
-                      <span className="label text-mute">Yours</span>
-                    ) : (
+              {done ? (
+                <div className="mt-6 bg-go p-6 text-paper">
+                  <p className="display text-5xl">You&apos;re in.</p>
+                  <p className="mt-3 text-paper/85">Your ticket is on your passkey. Open it at the door to show your entry code.</p>
+                  <SmallLink href="/tickets" variant="paper" className="mt-5">
+                    Open my tickets →
+                  </SmallLink>
+                </div>
+              ) : canBuy && left > 0 ? (
+                <div className="mt-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="label text-ink-2">How many</span>
+                    <div className="flex items-center gap-4">
                       <button
-                        className="label border border-ink px-3 py-2 disabled:opacity-40"
-                        disabled={!!busy || !address || (balance ?? 0n) < l.price}
-                        onClick={() => run(`resale-${l.id}`, async () => buyResale(await unlock(), event.id, l.id, l.price))}
+                        className="size-11 border-2 border-ink text-xl disabled:opacity-30"
+                        disabled={quantity <= 1}
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        aria-label="Fewer"
                       >
-                        {busy === `resale-${l.id}` ? "···" : "Buy"}
+                        −
                       </button>
-                    )}
+                      <span className="headline w-8 text-center text-3xl tabular-nums">{quantity}</span>
+                      <button
+                        className="size-11 border-2 border-ink text-xl disabled:opacity-30"
+                        disabled={quantity >= Math.min(10, left)}
+                        onClick={() => setQuantity((q) => Math.min(10, left, q + 1))}
+                        aria-label="More"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                  {!address ? (
+                    <Button className="w-full" onClick={openSheet}>
+                      <span className="text-lg">Sign in to buy · {formatAusd(total)}</span>
+                    </Button>
+                  ) : short ? (
+                    <>
+                      <Notice tone="warn">
+                        You need {formatAusd(total, { free: false })} and have {formatAusd(balance ?? 0n, { free: false })}. Add money first, then buy.
+                      </Notice>
+                      {chain.testnet ? (
+                        <Button className="w-full" busy={busy === "faucet"} onClick={topUp}>
+                          <span className="text-lg">Add $100 test dollars</span>
+                        </Button>
+                      ) : (
+                        <SmallLink href="/tickets" variant="primary">
+                          Add money →
+                        </SmallLink>
+                      )}
+                    </>
+                  ) : (
+                    <Button className="w-full" busy={busy === "buy"} onClick={() => run("buy", async () => buyTickets(await unlock(), event, tier, quantity))}>
+                      <span className="text-lg">
+                        {busy === "buy" ? "Confirm with your passkey…" : `Buy ${quantity} ticket${quantity === 1 ? "" : "s"} · ${formatAusd(total)}`}
+                      </span>
+                    </Button>
+                  )}
+                  <ul className="label flex flex-wrap gap-x-5 gap-y-1 text-ink-2">
+                    {["Held in escrow until you're in", "Refund yourself if cancelled", "No fees"].map((line) => (
+                      <li key={line}>
+                        <span className="text-go">✓</span> {line}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : sold && cheapest === null ? (
+                <div className="mt-6">
+                  <Notice tone="info">Sold out. If a fan lists a ticket for resale, it will appear on this page.</Notice>
+                </div>
+              ) : null}
+
+              {error && (
+                <div className="mt-5">
+                  <Notice tone="error">{error}</Notice>
+                </div>
+              )}
             </section>
+          )}
+
+          {(resale.length > 0 || ownListings.length > 0) && (
+            <Panel className="mt-12 scroll-mt-28">
+              <h2 id="resale" className="headline scroll-mt-28 text-3xl">
+                Resale tickets
+              </h2>
+              <p className="mt-2 text-sm text-ink-2">
+                From fans who can&apos;t make it. The host caps the price at {event.resaleCapBps === 0 ? "face value" : `face value +${event.resaleCapBps / 100}%`}, and the
+                ticket moves to you the moment you pay.
+              </p>
+              <div className="mt-5 space-y-2">
+                {[...resale, ...ownListings].map((l) => {
+                  const own = l.seller.toLowerCase() === address?.toLowerCase();
+                  const cannotAfford = !!address && (balance ?? 0n) < l.price;
+                  return (
+                    <div key={l.id} className="grid grid-cols-[1fr_auto] items-center gap-4 bg-paper px-4 py-3">
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium">{event.tiers[l.tier]?.name}</span>
+                        <span className="label text-ink-2">
+                          Ticket #{l.id.toString()}
+                          {cannotAfford && !own ? " · add money to buy" : ""}
+                        </span>
+                      </span>
+                      {own ? (
+                        <Pill tone="warn">Your listing · {formatAusd(l.price)}</Pill>
+                      ) : (
+                        <SmallButton
+                          variant="primary"
+                          busy={busy === `resale-${l.id}`}
+                          disabled={!!busy || cannotAfford}
+                          onClick={() => (address ? run(`resale-${l.id}`, async () => buyResale(await unlock(), event.id, l.id, l.price)) : openSheet())}
+                        >
+                          Buy · {formatAusd(l.price)}
+                        </SmallButton>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </Panel>
           )}
         </div>
       </div>

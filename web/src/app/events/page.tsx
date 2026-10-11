@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { EventCard } from "@/components/event-card";
 import { Reveal } from "@/components/motion";
 import { Shell } from "@/components/shell";
+import { SmallLink } from "@/components/ui";
 import { useEvents } from "@/lib/hooks";
 
 export default function EventsPage() {
@@ -23,15 +23,20 @@ export default function EventsPage() {
         <Reveal as="h1" lines immediate className="display text-[clamp(3.5rem,10vw,9rem)]">
           What&apos;s on
         </Reveal>
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pb-3">
-          <Link href="/host/new" className="label border-b border-ink pb-1">
-            + Host an event
-          </Link>
+        <div className="flex flex-wrap items-center gap-2 pb-3">
           {(["upcoming", "past"] as const).map((v) => (
-            <button key={v} onClick={() => setView(v)} className={`label ${view === v ? "" : "text-mute"}`}>
-              {view === v ? "■" : "□"} {v}
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              aria-pressed={view === v}
+              className={`label rounded-full px-3.5 py-2 transition-colors ${view === v ? "bg-ink text-paper" : "text-ink-2 hover:bg-ink/10"}`}
+            >
+              {v}
             </button>
           ))}
+          <SmallLink href="/host/new" className="ml-2">
+            + Host an event
+          </SmallLink>
         </div>
       </div>
 

@@ -7,11 +7,16 @@ import { useAccount } from "./account";
 import { BlockClock } from "./block-clock";
 import { Logo } from "./logo";
 
+// "My tickets" is what you bought; "Hosting" is what you run.
 const links = [
   { href: "/events", label: "Events" },
   { href: "/tickets", label: "My tickets" },
-  { href: "/host", label: "My events" },
+  { href: "/host", label: "Hosting" },
 ];
+
+const isActive = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
+const tab = (active: boolean) =>
+  `label rounded-full px-3.5 py-2 transition-colors ${active ? "bg-ink text-paper" : "text-ink-2 hover:bg-ink/10 hover:text-ink"}`;
 
 function subscribeScroll(listener: () => void) {
   window.addEventListener("scroll", listener, { passive: true });
@@ -43,10 +48,9 @@ export function Nav() {
           <p className={`label mt-1 ${secondary}`}>Tickets tied to a person</p>
         </div>
 
-        <nav className="hidden gap-6 pt-1.5 md:flex" aria-label="Main">
+        <nav className="hidden gap-1 md:flex" aria-label="Main">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className={`label ${pathname.startsWith(l.href) ? "" : "opacity-60 hover:opacity-100"}`}>
-              {pathname.startsWith(l.href) ? "■ " : "□ "}
+            <Link key={l.href} href={l.href} className={tab(isActive(pathname, l.href))} aria-current={isActive(pathname, l.href) ? "page" : undefined}>
               {l.label}
             </Link>
           ))}
@@ -58,16 +62,16 @@ export function Nav() {
               {name || `${address.slice(0, 6)}…${address.slice(-4)}`}
             </Link>
           ) : (
-            <button onClick={openSheet} className="label rounded-full border border-current px-4 py-2">
+            <button onClick={openSheet} className="label rounded-full bg-signal px-4 py-2 font-medium text-ink hover:brightness-95">
               Sign in
             </button>
           ))}
           <BlockClock className={secondary} />
         </div>
       </div>
-      <nav className={`flex gap-5 md:hidden ${scrolled ? "mt-2" : "mt-4"}`} aria-label="Main mobile">
+      <nav className={`-mx-1 flex gap-1 md:hidden ${scrolled ? "mt-2" : "mt-4"}`} aria-label="Main mobile">
         {links.map((l) => (
-          <Link key={l.href} href={l.href} className={`label ${pathname.startsWith(l.href) ? "" : "opacity-60"}`}>
+          <Link key={l.href} href={l.href} className={tab(isActive(pathname, l.href))} aria-current={isActive(pathname, l.href) ? "page" : undefined}>
             {l.label}
           </Link>
         ))}

@@ -11,6 +11,7 @@ import { EventCard } from "./event-card";
 import { EASE, prefersReducedMotion, Reveal } from "./motion";
 import { RowMark } from "./row-mark";
 import { TicketStub } from "./ticket-stub";
+import { Pill } from "./ui";
 
 export function Hero() {
   const root = useRef<HTMLElement>(null);
@@ -47,14 +48,20 @@ export function Hero() {
             </p>
           </Reveal>
           <div className="mt-10 flex max-w-md flex-col gap-3">
-            {[
-              { href: "/events", label: "Find an event" },
-              { href: "/host/new", label: "Host an event" },
-            ].map((l) => (
-              <Link key={l.href} href={l.href} data-cta className="label flex items-center justify-between border-b border-ink pb-3 hover:pl-2 transition-[padding] duration-500">
-                {l.label} <span aria-hidden>→</span>
-              </Link>
-            ))}
+            <Link
+              href="/events"
+              data-cta
+              className="flex items-center justify-between bg-signal px-5 py-4 text-lg font-medium text-ink transition-[filter] hover:brightness-95"
+            >
+              Find an event <span aria-hidden>→</span>
+            </Link>
+            <Link
+              href="/host/new"
+              data-cta
+              className="flex items-center justify-between border border-ink px-5 py-4 text-lg font-medium transition-colors hover:bg-ink hover:text-paper"
+            >
+              Host an event <span aria-hidden>→</span>
+            </Link>
           </div>
         </div>
 
@@ -67,7 +74,8 @@ export function Hero() {
               holder="Ada Obi"
               tier="Front row"
               number="007"
-              status={<span className="label rounded-full bg-ink px-2.5 py-1 text-paper">Valid</span>}
+              tint="#d9cfe8"
+              status={<Pill tone="go">Valid</Pill>}
             />
           </div>
           <p className="label mt-8 text-center text-mute md:text-right">Supporter No. 007 · since your first show</p>

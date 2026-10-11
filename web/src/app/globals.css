@@ -8,6 +8,12 @@
   --color-ink-2: #3b3833;
   --color-ink: #151412;
   --color-signal: #e4492e;
+  --color-go: #1f6f47;
+  --color-go-soft: #d3e8d9;
+  --color-warn: #8a5a00;
+  --color-warn-soft: #f3e2b5;
+  --color-stop: #a3162a;
+  --color-stop-soft: #f3d3d0;
 
   --font-display: var(--font-inter-tight);
   --font-mono: var(--font-geist-mono);

@@ -144,7 +144,7 @@ export default function DoorPage() {
     return () => clearTimeout(clear);
   }, [result]);
 
-  const tone = result?.kind === "ok" ? "bg-paper text-ink" : result?.kind === "error" ? "bg-signal text-paper" : "bg-ink text-paper";
+  const tone = result?.kind === "ok" ? "bg-go text-paper" : result?.kind === "error" ? "bg-stop text-paper" : "bg-ink text-paper";
 
   if (key === undefined) return <main className="min-h-dvh bg-ink" />;
 

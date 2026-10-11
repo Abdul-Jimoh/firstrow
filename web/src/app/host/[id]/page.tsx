@@ -10,7 +10,7 @@ import { EditDetails } from "@/components/edit-details";
 import { Reveal } from "@/components/motion";
 import { QR } from "@/components/qr";
 import { Shell } from "@/components/shell";
-import { Button, Notice, Stat } from "@/components/ui";
+import { Button, Notice, Panel, Pill, SmallButton, SmallLink, Stat, type Tone } from "@/components/ui";
 import { dateLabel, encodeMeta, formatAusd, phaseOf, timeLabel } from "@/lib/events";
 import { useEvent, useHostBalance } from "@/lib/hooks";
 import { fetchTopSupporters } from "@/lib/indexer";
@@ -38,6 +38,7 @@ export default function ManageEventPage() {
   const [doorLink, setDoorLink] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   if (isLoading) return <Shell><p className="label text-mute">Reading the chain…</p></Shell>;
   if (!event) return <Shell><h1 className="display text-6xl">No such event.</h1></Shell>;
@@ -83,124 +84,54 @@ export default function ManageEventPage() {
       setDoorLink(`${window.location.origin}/door/${event.id}#k=${key}`);
     });
 
+  const live = phase !== "ended" && phase !== "cancelled";
+  const status: { label: string; tone: Tone } =
+    phase === "cancelled"
+      ? { label: "Cancelled", tone: "stop" }
+      : phase === "ended"
+        ? { label: "Ended", tone: "done" }
+        : phase === "live"
+          ? { label: "Happening now", tone: "go" }
+          : phase === "on-sale"
+            ? { label: "On sale", tone: "go" }
+            : phase === "presale"
+              ? { label: "Presale open", tone: "warn" }
+              : { label: "Not on sale yet", tone: "done" };
+  const publicLink = typeof window === "undefined" ? "" : `${window.location.origin}/events/${event.id}`;
+
   return (
     <Shell>
-      <p className="label text-mute">
-        <Link href="/host" className="link-line">
-          Your events
-        </Link>{" "}
-        / {phase}
-      </p>
-      <Reveal as="h1" lines immediate className="display mt-6 text-[clamp(3rem,8vw,7rem)]">
+      <div className="flex flex-wrap items-center gap-4">
+        <Link href="/host" className="label text-ink-2 link-line">
+          ← Hosting
+        </Link>
+        <Pill tone={status.tone}>{status.label}</Pill>
+      </div>
+      <Reveal as="h1" lines immediate className="display mt-5 text-[clamp(3rem,8vw,7rem)]">
         {event.meta.name}
       </Reveal>
       <p className="label mt-4 text-ink-2">
         {dateLabel(event.startsAt)} · {timeLabel(event.startsAt)}–{timeLabel(event.endsAt)} · {event.meta.venue}
       </p>
 
-      <div className="mt-14 grid grid-cols-2 gap-6 md:grid-cols-4">
-        <Stat label="Sold" value={`${event.sold}/${supply}`} />
-        <Stat label="Checked in" value={event.checkedIn} />
-        <Stat label="In escrow" value={formatAusd(event.validValue, { free: false })} />
-        <Stat label="Yours to withdraw" value={formatAusd(balance ?? 0n, { free: false })} />
-      </div>
-
-      <div className="mt-16 grid gap-16 lg:grid-cols-2">
-        <section>
-          <p className="label">[01] Door</p>
-          <h2 className="headline mt-4 text-4xl">Pair a phone for the door.</h2>
-          <p className="mt-3 max-w-md text-ink-2">
-            Each phone gets its own key. It can only submit check-ins that guests sign themselves, so a lost phone can&apos;t move
-            any money.
-          </p>
-          {doorLink ? (
-            <div className="mt-8 grid items-start gap-6 sm:grid-cols-[12rem_1fr]">
-              <QR value={doorLink} label="Door phone pairing code" className="w-48 bg-paper-2 p-3" />
-              <div className="space-y-4">
-                <Notice tone="ok">Scan this with the door phone&apos;s camera. It opens the scanner, already paired.</Notice>
-                <button className="label link-line" onClick={() => navigator.clipboard.writeText(doorLink)}>
-                  Copy link instead
-                </button>
-                <button className="label block text-mute link-line" onClick={() => setDoorLink(null)}>
-                  Done
-                </button>
-              </div>
-            </div>
-          ) : (
-            <Button className="mt-8 w-full max-w-md" busy={busy === "door"} disabled={phase === "ended" || phase === "cancelled"} onClick={pairDoor}>
-              <span className="text-lg">Pair a door phone</span>
-            </Button>
-          )}
-        </section>
-
-        <section>
-          <p className="label">[02] Money</p>
-          <h2 className="headline mt-4 text-4xl">Paid as people walk in.</h2>
-          <p className="mt-3 max-w-md text-ink-2">
-            Each ticket&apos;s price becomes yours when its holder checks in, plus your cut of resales. Tickets nobody uses become
-            yours 7 days after the event if the holder doesn&apos;t claim a refund.
-          </p>
-          <Button
-            className="mt-8 w-full max-w-md"
-            busy={busy === "withdraw"}
-            disabled={!balance}
-            onClick={() => run("withdraw", async () => send(await unlock(), "withdraw", [event.id, address]))}
-          >
-            <span className="text-lg">Withdraw {formatAusd(balance ?? 0n, { free: false })}</span>
-          </Button>
-
-          {phase !== "ended" && phase !== "cancelled" && (
-            <div className="mt-12 border-t rule pt-6">
-              {confirmCancel ? (
-                <div className="space-y-4">
-                  <Notice tone="error">Every guest will be able to refund themselves. This can&apos;t be undone.</Notice>
-                  <div className="flex gap-4">
-                    <button
-                      className="label bg-signal px-4 py-3 text-paper"
-                      disabled={!!busy}
-                      onClick={() => run("cancel", async () => send(await unlock(), "cancelEvent", [event.id]))}
-                    >
-                      {busy === "cancel" ? "Cancelling…" : "Yes, cancel the event"}
-                    </button>
-                    <button className="label px-4 py-3" onClick={() => setConfirmCancel(false)}>
-                      Keep it
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button className="label text-mute link-line" onClick={() => setConfirmCancel(true)}>
-                  Cancel event
-                </button>
-              )}
-            </div>
-          )}
-        </section>
+      <div className="mt-6 flex flex-wrap gap-2">
+        <SmallButton variant="ink" onClick={() => navigator.clipboard.writeText(publicLink).then(() => setCopied(true))}>
+          {copied ? "Link copied ✓" : "Copy link to share"}
+        </SmallButton>
+        <SmallLink href={`/events/${event.id}`}>View public page</SmallLink>
+        {phase !== "ended" && !editing && <SmallButton onClick={() => setEditing(true)}>Edit details</SmallButton>}
+        {phase !== "ended" && (
+          <label className={`label inline-flex cursor-pointer items-center border border-ink px-4 py-2.5 transition-colors hover:bg-ink hover:text-paper ${busy === "poster" ? "opacity-40" : ""}`}>
+            {busy === "poster" ? "Uploading poster…" : event.meta.poster ? "Change poster" : "Upload a poster"}
+            <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={!!busy} onChange={(e) => changePoster(e.target.files?.[0])} />
+          </label>
+        )}
       </div>
 
       {error && (
-        <div className="mt-8">
+        <div className="mt-6">
           <Notice tone="error">{error}</Notice>
         </div>
-      )}
-
-      {supporters && supporters.length > 0 && (
-        <section className="mt-20">
-          <p className="label">[03] Your supporters</p>
-          <h2 className="headline mt-4 text-4xl">The people who keep showing up.</h2>
-          <div className="mt-6 border-t border-ink">
-            {supporters.map((s) => (
-              <Link key={s.fan} href={`/fans/${s.fan}`} className="grid grid-cols-[5rem_1fr_auto] items-baseline gap-4 border-b rule py-4">
-                <span className="headline text-2xl tabular-nums">{String(s.number).padStart(3, "0")}</span>
-                <span className={names?.[s.fan.toLowerCase()] ? "headline text-xl" : "label"}>
-                  {names?.[s.fan.toLowerCase()] ?? `${s.fan.slice(0, 6)}…${s.fan.slice(-4)}`}
-                </span>
-                <span className="label text-mute">
-                  {s.shows} show{s.shows === 1 ? "" : "s"}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
       )}
 
       {editing && (
@@ -217,28 +148,99 @@ export default function ManageEventPage() {
         />
       )}
 
-      <div className="mt-16 flex flex-wrap items-center gap-x-10 gap-y-4 border-t rule pt-6">
-        {phase !== "ended" && !editing && (
-          <button className="label link-line" onClick={() => setEditing(true)}>
-            Edit details
-          </button>
-        )}
-        {phase !== "ended" && (
-          <label className={`label link-line cursor-pointer ${busy === "poster" ? "opacity-40" : ""}`}>
-            {busy === "poster" ? "Uploading poster…" : event.meta.poster ? "Change poster" : "+ Upload a poster"}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-              disabled={!!busy}
-              onChange={(e) => changePoster(e.target.files?.[0])}
-            />
-          </label>
-        )}
-        <Link href={`/events/${event.id}`} className="label link-line">
-          View public page →
-        </Link>
+      <div className="mt-12 grid grid-cols-2 gap-6 md:grid-cols-4">
+        <Stat label="Sold" value={`${event.sold}/${supply}`} />
+        <Stat label="Checked in" value={event.checkedIn} />
+        <Stat label="In escrow" value={formatAusd(event.validValue, { free: false })} />
+        <Stat label="Yours to withdraw" value={formatAusd(balance ?? 0n, { free: false })} tone={balance ? "go" : undefined} />
       </div>
+
+      <div className="mt-10 grid gap-6 lg:grid-cols-2">
+        <Panel>
+          <p className="label text-ink-2">At the door</p>
+          <h2 className="headline mt-2 text-3xl">Pair a phone to scan tickets.</h2>
+          <p className="mt-3 text-ink-2">
+            Any phone with a camera works. Each one gets its own key that can only submit check-ins guests sign themselves, so a
+            lost phone can&apos;t move any money.
+          </p>
+          {doorLink ? (
+            <div className="mt-6 grid items-start gap-6 sm:grid-cols-[11rem_1fr]">
+              <QR value={doorLink} label="Door phone pairing code" className="w-44 bg-white p-3" />
+              <div className="space-y-3">
+                <Notice tone="ok">Scan this with the door phone&apos;s camera. It opens the scanner, already paired.</Notice>
+                <div className="flex flex-wrap gap-2">
+                  <SmallButton onClick={() => navigator.clipboard.writeText(doorLink)}>Copy link instead</SmallButton>
+                  <SmallButton variant="ink" onClick={() => setDoorLink(null)}>
+                    Done
+                  </SmallButton>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Button className="mt-6 w-full" busy={busy === "door"} disabled={!live} onClick={pairDoor}>
+              <span className="text-lg">Pair a door phone</span>
+            </Button>
+          )}
+        </Panel>
+
+        <Panel>
+          <p className="label text-ink-2">Your money</p>
+          <h2 className="headline mt-2 text-3xl">Paid as people walk in.</h2>
+          <p className="mt-3 text-ink-2">
+            Each ticket&apos;s price becomes yours when its holder checks in, plus your cut of resales. Unused tickets become yours 7
+            days after the event if the holder doesn&apos;t claim a refund.
+          </p>
+          <Button
+            className="mt-6 w-full"
+            variant={balance ? "primary" : "ink"}
+            busy={busy === "withdraw"}
+            disabled={!balance}
+            onClick={() => run("withdraw", async () => send(await unlock(), "withdraw", [event.id, address]))}
+          >
+            <span className="text-lg">{balance ? `Withdraw ${formatAusd(balance, { free: false })}` : "Nothing to withdraw yet"}</span>
+          </Button>
+        </Panel>
+      </div>
+
+      {supporters && supporters.length > 0 && (
+        <section className="mt-16">
+          <p className="label text-ink-2">Your supporters</p>
+          <h2 className="headline mt-2 text-3xl">The people who keep showing up.</h2>
+          <div className="mt-6 border-t-2 border-ink">
+            {supporters.map((s) => (
+              <Link key={s.fan} href={`/fans/${s.fan}`} className="grid grid-cols-[5rem_1fr_auto] items-baseline gap-4 border-b rule py-4 hover:bg-paper-2">
+                <span className="headline text-2xl tabular-nums">{String(s.number).padStart(3, "0")}</span>
+                <span className={names?.[s.fan.toLowerCase()] ? "headline text-xl" : "label"}>
+                  {names?.[s.fan.toLowerCase()] ?? `${s.fan.slice(0, 6)}…${s.fan.slice(-4)}`}
+                </span>
+                <span className="label text-ink-2">
+                  {s.shows} show{s.shows === 1 ? "" : "s"}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {live && (
+        <section className="mt-16 border-t rule pt-6">
+          {confirmCancel ? (
+            <div className="max-w-xl space-y-4">
+              <Notice tone="error">Cancelling lets every guest refund themselves, and it can&apos;t be undone.</Notice>
+              <div className="flex flex-wrap gap-2">
+                <SmallButton variant="danger" busy={busy === "cancel"} onClick={() => run("cancel", async () => send(await unlock(), "cancelEvent", [event.id]))}>
+                  Yes, cancel the event
+                </SmallButton>
+                <SmallButton onClick={() => setConfirmCancel(false)}>Keep it</SmallButton>
+              </div>
+            </div>
+          ) : (
+            <SmallButton variant="danger" onClick={() => setConfirmCancel(true)}>
+              Cancel event
+            </SmallButton>
+          )}
+        </section>
+      )}
     </Shell>
   );
 }

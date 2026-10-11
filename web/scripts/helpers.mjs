@@ -34,8 +34,8 @@ export async function signUp(page, name) {
 
 export async function topUp(page) {
   await page.goto(`${base}/tickets`);
-  await page.getByRole("button", { name: "+ Add test dollars" }).click();
-  await page.getByText(/Balance \$100/).waitFor({ timeout: 60_000 });
+  await page.getByRole("button", { name: /Add \$100 test dollars/ }).click();
+  await page.getByText("$100", { exact: true }).waitFor({ timeout: 60_000 });
 }
 
 export async function createEvent(page, { name, price = "5", minutesFromNow = 30 }) {

@@ -15,8 +15,8 @@ export function Footer() {
           {[
             { href: "/host/new", label: "Create an event" },
             { href: "/events", label: "Find something to go to" },
-          ].map((l) => (
-            <Link key={l.href} href={l.href} className="label flex w-full max-w-xs items-center justify-between border-b border-paper/40 pb-3 hover:border-paper">
+          ].map((l, i) => (
+            <Link key={l.href} href={l.href} className={`flex w-full max-w-xs items-center justify-between px-5 py-4 font-medium transition-colors ${i === 0 ? "bg-signal text-ink hover:brightness-95" : "border border-paper text-paper hover:bg-paper hover:text-ink"}`}>
               {l.label} <span aria-hidden>→</span>
             </Link>
           ))}
