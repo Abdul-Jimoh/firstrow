@@ -197,7 +197,10 @@ export function Rules() {
 
 export function Upcoming() {
   const { data, isLoading } = useQuery({ queryKey: ["events"], queryFn: () => fetchEvents(12) });
-  const upcoming = (data ?? []).filter((e) => !e.cancelled && e.endsAt > new Date()).slice(0, 6);
+  const upcoming = (data ?? [])
+    .filter((e) => !e.cancelled && e.endsAt > new Date())
+    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
+    .slice(0, 6);
 
   return (
     <section className="gutter pb-24 md:pb-36">

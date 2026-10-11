@@ -10,7 +10,9 @@ export default function EventsPage() {
   const { data, isLoading } = useEvents();
   const [view, setView] = useState<"upcoming" | "past">("upcoming");
   const now = new Date();
-  const events = (data ?? []).filter((e) => (view === "upcoming" ? e.endsAt > now && !e.cancelled : e.endsAt <= now || e.cancelled));
+  const events = (data ?? [])
+    .filter((e) => (view === "upcoming" ? e.endsAt > now && !e.cancelled : e.endsAt <= now || e.cancelled))
+    .sort((a, b) => (view === "upcoming" ? a.startsAt.getTime() - b.startsAt.getTime() : b.startsAt.getTime() - a.startsAt.getTime()));
 
   return (
     <Shell>
