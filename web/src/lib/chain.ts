@@ -15,7 +15,7 @@ const networks = {
     firstrow: "0xa0701766CEf8F7F42D919347A0227f4aD3ef6F58",
     forwarder: "0x8071155E3c3621FD5fe9Eae19C79D5bA9a2a70Ac",
     // Events made by automated test runs against this deployment. Left out of listings; still reachable by link.
-    hidden: [12n, 13n],
+    hidden: [12n, 13n, 15n],
   },
 } as const satisfies Record<
   string,
