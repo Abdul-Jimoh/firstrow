@@ -7,12 +7,12 @@ import { isAddress, type Address } from "viem";
 import { useAccount } from "@/components/account";
 import { Reveal } from "@/components/motion";
 import { Shell } from "@/components/shell";
-import { Stat } from "@/components/ui";
+import { SmallLink, Stat } from "@/components/ui";
 import { explorer } from "@/lib/chain";
 import { dateLabel } from "@/lib/events";
 import { useEvents } from "@/lib/hooks";
-import { fetchFanRecord } from "@/lib/indexer";
-import { fetchName } from "@/lib/profile";
+import { fetchFanRecord, fetchHostSummary, fetchTopSupporters } from "@/lib/indexer";
+import { fetchName, fetchNames } from "@/lib/profile";
 
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const no = (n: number) => String(n).padStart(3, "0");
@@ -25,6 +25,19 @@ export default function FanPage() {
   const { data: record, isLoading } = useQuery({ queryKey: ["fan", fan], queryFn: () => fetchFanRecord(fan!), enabled: !!fan });
   const { data: events } = useEvents();
   const { data: savedName } = useQuery({ queryKey: ["name", fan], queryFn: () => fetchName(fan!), enabled: !!fan && !mine });
+
+  const { data: hosting } = useQuery({ queryKey: ["hostSummary", fan], queryFn: () => fetchHostSummary(fan!), enabled: !!fan });
+  const { data: supporters } = useQuery({
+    queryKey: ["topSupporters", fan],
+    queryFn: () => fetchTopSupporters(fan!, 20),
+    enabled: !!fan && !!hosting && hosting.supporters > 0,
+  });
+  const supporterFans = (supporters ?? []).map((s) => s.fan);
+  const { data: names } = useQuery({
+    queryKey: ["names", supporterFans.join(",")],
+    queryFn: () => fetchNames(supporterFans),
+    enabled: supporterFans.length > 0,
+  });
 
   if (!fan) return <Shell><h1 className="display text-6xl">No such fan.</h1></Shell>;
 
@@ -44,15 +57,50 @@ export default function FanPage() {
         Every show checked in at the door, written to Monad. It can&apos;t be bought, faked or transferred.
       </p>
 
+      {hosting && hosting.events > 0 && (
+        <section className="mt-14 bg-ink p-5 text-paper sm:p-8">
+          <p className="label text-paper/60">As a host</p>
+          <div className="mt-5 grid grid-cols-2 gap-6 md:grid-cols-4">
+            {(
+              [
+                ["Events hosted", hosting.events],
+                ["Tickets sold", hosting.ticketsSold],
+                ["Checked in at the door", hosting.checkIns],
+                ["Supporters on record", hosting.supporters],
+              ] as const
+            ).map(([label, value]) => (
+              <div key={label}>
+                <p className="display text-5xl tabular-nums">{value}</p>
+                <p className="label mt-2 text-paper/60">{label}</p>
+              </div>
+            ))}
+          </div>
+          {supporters && supporters.length > 0 && (
+            <div className="mt-8 border-t border-paper/25">
+              {supporters.map((s) => (
+                <Link key={s.fan} href={`/fans/${s.fan}`} className="grid grid-cols-[4.5rem_1fr_auto] items-baseline gap-4 border-b border-paper/15 py-3 hover:bg-paper/5">
+                  <span className="headline text-2xl tabular-nums">{no(s.number)}</span>
+                  <span className={names?.[s.fan.toLowerCase()] ? "headline text-xl" : "label"}>{names?.[s.fan.toLowerCase()] ?? short(s.fan)}</span>
+                  <span className="label text-paper/60">
+                    {s.shows} show{s.shows === 1 ? "" : "s"}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {isLoading ? (
         <p className="label mt-16 text-mute">Reading the record…</p>
       ) : !record || record.standings.length === 0 ? (
-        <p className="headline mt-16 text-2xl text-ink-2">
-          No shows yet.{" "}
-          <Link href="/events" className="link-line">
-            Find one to start with →
-          </Link>
-        </p>
+        <div className="mt-14 max-w-md space-y-4">
+          <p className="headline text-3xl">{hosting && hosting.events > 0 ? "No shows attended as a guest yet." : "No shows yet."}</p>
+          <p className="text-ink-2">Shows appear here when a ticket is scanned at the door.</p>
+          <SmallLink href="/events" variant="primary">
+            Find an event →
+          </SmallLink>
+        </div>
       ) : (
         <>
           <div className="mt-14 grid grid-cols-2 gap-6 md:grid-cols-3">

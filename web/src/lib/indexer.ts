@@ -80,6 +80,21 @@ export async function fetchTopSupporters(host: Address, limit = 10): Promise<(St
   }
 }
 
+export type HostSummary = { events: number; ticketsSold: number; checkIns: number; supporters: number };
+
+// What an account has done as a host. Null when it hasn't hosted, or the indexer is unreachable.
+export async function fetchHostSummary(host: Address): Promise<HostSummary | null> {
+  try {
+    const data = await gql<{ Host: HostSummary[] }>(
+      `query Host($id: String!) { Host(where: { id: { _eq: $id } }, limit: 1) { events ticketsSold checkIns supporters } }`,
+      { id: host.toLowerCase() },
+    );
+    return data.Host[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchTotals(): Promise<Totals | null> {
   try {
     const data = await gql<{ Totals: Totals[] }>(`query { Totals(limit: 1) { events ticketsSold checkIns supporters } }`, {});
