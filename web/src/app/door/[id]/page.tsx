@@ -11,7 +11,7 @@ import { chain, network, publicClient } from "@/lib/chain";
 import { decodeEntry, doorMessage } from "@/lib/entry";
 import { useEvent } from "@/lib/hooks";
 import { fetchName } from "@/lib/profile";
-import { send } from "@/lib/signing";
+import { ContractRevert, send } from "@/lib/signing";
 
 type Result =
   | { kind: "ok"; admitted: number; name: string | null; tiers: string[]; supporterNumber: number; firstTime: boolean }
@@ -54,6 +54,7 @@ export default function DoorPage() {
   const scanner = useRef<QrScanner | null>(null);
   const busy = useRef(false);
   const lastCode = useRef<{ value: string; at: number } | null>(null);
+  const admitted = useRef(new Set<string>());
   const [result, setResult] = useState<Result | null>(null);
   const [checking, setChecking] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -64,9 +65,11 @@ export default function DoorPage() {
       const now = Date.now();
       if (lastCode.current?.value === raw && now - lastCode.current.at < 4000) return;
       lastCode.current = { value: raw, at: now };
-
+      // A code this door just admitted is still on the guest's screen for a moment. Don't call it a failure.
+      if (admitted.current.has(raw)) return;
+      // Other QR codes wander into view, the pairing code on the host's laptop among them. Ignore them.
       const entry = decodeEntry(raw);
-      if (!entry) return setResult({ kind: "error", message: "Not a Firstrow code." });
+      if (!entry) return;
       if (entry.eventId !== event.id) return setResult({ kind: "error", message: doorMessage("WrongEvent") });
 
       busy.current = true;
@@ -83,6 +86,7 @@ export default function DoorPage() {
           publicClient.readContract({ address: network.firstrow, abi: firstrowAbi, functionName: "supporter", args: [event.host, fan] }),
           fetchName(fan),
         ]);
+        admitted.current.add(raw);
         setResult({
           kind: "ok",
           admitted: entry.ticketIds.length,
@@ -92,7 +96,9 @@ export default function DoorPage() {
           firstTime: supporter.shows === 1,
         });
       } catch (e) {
-        setResult({ kind: "error", message: doorMessage(e instanceof Error ? e.message : "Check-in failed") });
+        // The relayer reports the contract's error name; a refusal caught before relaying carries it as `reason`.
+        const reason = e instanceof ContractRevert ? e.reason : e instanceof Error ? e.message : "";
+        setResult({ kind: "error", message: doorMessage(reason) });
       } finally {
         setChecking(false);
         setTimeout(() => {

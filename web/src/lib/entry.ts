@@ -32,5 +32,5 @@ export function doorMessage(error: string) {
     EventIsCancelled: "This event was cancelled.",
     NotDoor: "This phone isn't paired for this event any more.",
   };
-  return messages[error] ?? error;
+  return messages[error] ?? "Couldn't check this ticket in. Try scanning again.";
 }

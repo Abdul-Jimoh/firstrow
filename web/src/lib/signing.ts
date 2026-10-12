@@ -1,6 +1,9 @@
 import {
+  BaseError,
   concat,
+  decodeErrorResult,
   encodeFunctionData,
+  isHex,
   keccak256,
   toHex,
   type Address,
@@ -64,6 +67,55 @@ const checkInTypes = {
   ],
 } as const;
 
+// A call the contract would refuse. `reason` is the contract's error name, such as "SoldOut".
+export class ContractRevert extends Error {
+  constructor(readonly reason: string) {
+    super(revertMessages[reason] ?? "That didn't go through. Please try again.");
+  }
+}
+
+const revertMessages: Record<string, string> = {
+  SoldOut: "Those tickets just sold out.",
+  SaleNotOpen: "Tickets aren't on sale yet.",
+  SaleClosed: "This event has ended.",
+  PresaleLocked: "The presale is for fans who've been to this host's shows before.",
+  EventIsCancelled: "This event was cancelled.",
+  NotRefundable: "This ticket can't be refunded right now.",
+  TicketNotValid: "This ticket has already been used or refunded.",
+  PriceAboveCap: "That's above the resale price the host allows.",
+  NotListed: "That ticket is no longer for sale.",
+  OwnTicket: "That's your own listing.",
+  NothingToWithdraw: "There's nothing to withdraw yet.",
+  NotHost: "Only the host can do that.",
+  NotOwner: "That ticket belongs to someone else.",
+  InvalidSchedule: "Check the dates: the event has to start in the future and end after it starts.",
+  InvalidTiers: "Add at least one ticket tier with at least one ticket.",
+};
+
+function revertData(error: unknown): Hex | undefined {
+  if (!(error instanceof BaseError)) return undefined;
+  const found = error.walk((e) => isHex((e as { data?: unknown }).data));
+  return (found as { data?: Hex } | null)?.data;
+}
+
+// Estimation errors often arrive without the revert data, so replay the call to read the contract's own error.
+async function revertReason(call: { account: Address; to: Address; data: Hex }, error: unknown): Promise<string> {
+  let data = revertData(error);
+  if (!data) {
+    try {
+      await publicClient.call(call);
+    } catch (replayed) {
+      data = revertData(replayed);
+    }
+  }
+  if (!data) return "Unknown";
+  try {
+    return decodeErrorResult({ abi: firstrowAbi, data }).errorName;
+  } catch {
+    return "Unknown";
+  }
+}
+
 type WriteName = ContractFunctionName<typeof firstrowAbi, "nonpayable">;
 
 // Signs a forward request for a Firstrow call made by `account`. The relayer submits it and pays the gas.
@@ -75,11 +127,10 @@ export async function signForwardRequest<name extends WriteName>(
   const data = encodeFunctionData({ abi: firstrowAbi, functionName, args } as never);
 
   // Simulate the call exactly as the forwarder makes it: from the forwarder, with the signer appended.
+  const forwarded = { account: network.forwarder, to: network.firstrow, data: concat([data, account.address]) };
   const [estimate, nonce] = await Promise.all([
-    publicClient.estimateGas({
-      account: network.forwarder,
-      to: network.firstrow,
-      data: concat([data, account.address]),
+    publicClient.estimateGas(forwarded).catch(async (error) => {
+      throw new ContractRevert(await revertReason(forwarded, error));
     }),
     publicClient.readContract({
       address: network.forwarder,
