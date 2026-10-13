@@ -93,10 +93,12 @@ Code: [`indexer/`](indexer/), client in [`web/src/lib/indexer.ts`](web/src/lib/i
 
 | Network | Contract | Address |
 |---|---|---|
+| Monad mainnet (143) | Firstrow | [`0x2425e8e48Ba58b512ceb76CA6c01277E35623ADe`](https://monadscan.com/address/0x2425e8e48Ba58b512ceb76CA6c01277E35623ADe) |
+| Monad mainnet (143) | ERC2771Forwarder | [`0xfA7Ba87b2FFf0629dEAD5C20665D9e44eF742a76`](https://monadscan.com/address/0xfA7Ba87b2FFf0629dEAD5C20665D9e44eF742a76) |
 | Monad testnet (10143) | Firstrow | [`0xa0701766CEf8F7F42D919347A0227f4aD3ef6F58`](https://testnet.monadscan.com/address/0xa0701766CEf8F7F42D919347A0227f4aD3ef6F58) |
 | Monad testnet (10143) | ERC2771Forwarder | [`0x8071155E3c3621FD5fe9Eae19C79D5bA9a2a70Ac`](https://testnet.monadscan.com/address/0x8071155E3c3621FD5fe9Eae19C79D5bA9a2a70Ac) |
 
-Both are verified on Sourcify. The app runs on testnet so anyone can try it with free test dollars.
+All four are verified on Sourcify. The mainnet contracts are the same code, pointed at Agora's mainnet AUSD. The app itself runs on testnet, so anyone can try the whole flow with free test dollars.
 
 ## Testing
 
@@ -145,7 +147,7 @@ To deploy the contracts: `cd contracts && forge script script/Deploy.s.sol --rpc
 
 ## Status and limits
 
-- The app runs on Monad testnet with test dollars. On mainnet, fans would fund their account by sending AUSD to it; a card on-ramp is the next step for people who don't hold crypto.
+- The app runs on Monad testnet with test dollars; the contract is also deployed on mainnet but the app doesn't use it yet. On mainnet, fans would fund their account by sending AUSD to it; a card on-ramp is the next step for people who don't hold crypto.
 - The relayer is run by Firstrow. It cannot move funds or forge actions, but if it is down, nothing gets relayed. Every contract function can also be called directly by an account that holds MON.
 - Posters and display names are stored off-chain (Vercel Blob). Everything about money, tickets and attendance is on-chain.
 - A fan who simply doesn't attend can reclaim their money in the week after the event. Hosts are guaranteed revenue only for guests who came through the door.

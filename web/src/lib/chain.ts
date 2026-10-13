@@ -5,8 +5,8 @@ const networks = {
   monad: {
     chain: monad,
     ausd: "0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a",
-    firstrow: "0x0000000000000000000000000000000000000000",
-    forwarder: "0x0000000000000000000000000000000000000000",
+    firstrow: "0x2425e8e48Ba58b512ceb76CA6c01277E35623ADe",
+    forwarder: "0xfA7Ba87b2FFf0629dEAD5C20665D9e44eF742a76",
     hidden: [],
   },
   monadTestnet: {
